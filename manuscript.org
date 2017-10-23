@@ -1,0 +1,200 @@
+#+LATEX_CLASS: elsarticle
+#+LATEX_CLASS_OPTIONS: [number, sort&compress, review, 12pt]
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+OPTIONS: toc:nil ^:{} author:nil
+
+#+latex_header: \usepackage[utf8]{inputenc}
+#+latex_header: \usepackage{fixltx2e}
+#+latex_header: \usepackage{url}
+#+latex_header: \usepackage[version=3]{mhchem}
+#+latex_header: \usepackage{graphicx}
+#+latex_header: \usepackage{tcolorbox}
+#+latex_header: \usepackage{color}
+#+latex_header: \usepackage{amsmath}
+#+latex_header: \usepackage{textcomp}
+#+latex_header: \usepackage{wasysym}
+#+latex_header: \usepackage{latexsym}
+#+latex_header: \usepackage{amssymb}
+#+LATEX_HEADER: \usepackage[linktocpage,
+#+LATEX_HEADER:   pdfstartview=FitH,
+#+LATEX_HEADER:   colorlinks,
+#+LATEX_HEADER:   linkcolor=blue,
+#+LATEX_HEADER:   anchorcolor=blue,
+#+LATEX_HEADER:   citecolor=blue,
+#+LATEX_HEADER:   filecolor=blue,
+#+LATEX_HEADER:   menucolor=blue,
+#+LATEX_HEADER:   urlcolor=blue]{hyperref}
+#+latex_header: \usepackage{float}
+
+\begin{frontmatter}
+\title{First-principles study of the Cu-Pd phase diagram}
+\author[cmu]{Feiyang Geng}
+\author[cmu]{Jacob R. Boes}
+\author[cmu]{John R. Kitchin\corref{cor}}
+\ead{jkitchin@andrew.cmu.edu}
+\address[cmu]{Department of Chemical Engineering, Carnegie Mellon University, Pittsburgh, PA 15213}
+\cortext[cor]{Corresponding author}
+
+\begin{abstract}
+The equilibrium phase diagram of a Cu-Pd alloy has been computed using cluster expansion and Monte Carlo simulation methods combined with density functional theory. The computed phase boundaries show basic features that are consistent with the experimentally reported phase diagram. Without vibrational free energy contributions, the order-disorder transition temperature is underestimated by 100 K and the critical point is inconsistent with experimental result. The addition of vibrational free energy contributions yields a more qualitatively correct Cu-Pd phase diagram in the Cu rich region.    
+\end{abstract}
+
+\begin{keyword}
+density functional theory; copper; palladium
+\end{keyword}
+\end{frontmatter}
+
+
+* Introduction
+
+Hydrogen separation technology is an essential component to enable a hydrogen economy. Palladium (Pd) has been utilized as a membrane material for hydrogen separation because of its high selectivity cite:she-2014-hydrog-permeab. However, pure Pd has a drawback due to the formation of Pd hydride (from \alpha phase to \beta phase) at certain temperatures (\gt 300 °C) and pressures (\lt 2 × 10^{6} Pa) cite:ryi-2006-charac-pd as well as its low sulfur tolerance cite:she-2014-hydrog-permeab. For example, \ce{H2S} significantly reduces the hydrogen flux rate in a Pd membrane through the formation of Pd sulfides. Pd-Cu alloys and other Pd alloys such as Cu-Pd-Au were developed and reported to have improved sulfur resistance in the \ce{H2} separation process cite:morreale-2004-effec-hydrog,tarditi-2011-novel-pdagc. 
+
+In the Cu-Pd system at high temperature the most stable state is a disordered fcc solid solution. At temperatures lower than 871 K, phase separation occurs into B2 and L1_{2} structures cite:teeriniemi-2015-first-princ and long period super-lattice (LPS) phases exist between the B2 and L1_{2} super-structures. The L1_{2} structure has a face-centered cubic (fcc) lattice. The B2 phase has a body-centered cubic (bcc) lattice. Because of its open structure, Cu-Pd bcc was found to have a much higher \ce{H2} diffusion rate and a lower activation energy for diffusion than a fcc structure in pure \ce{H2} flux cite:piper-1966-diffus-hydrog. However, the Cu-Pd fcc structure has better sulfur tolerance than the bcc structure in the presence of 1000 ppm \ce{H2S} cite:morreale-2004-effec-hydrog. Also, the Cu-Pd bcc structure becomes unstable at high temperature and transforms into the disordered fcc solid solution at temperatures higher than 833 K  cite:morreale-2004-effec-hydrog,howard-2004-hydrog-permean.
+
+The Cu-Pd phase diagram was studied by Subramanian in 1991 cite:subramanian-1991-cu-pd-pallad. Based on the regular-solution model and previous experimental data, the Cu-Pd phase diagram above 300 °C was established. Huang reconstructed the phase diagram and regions for Cu-Pd phases, including the B2, L1_{2}, 1-D LPS, and 2-D LPS were all evaluated based on a limited amount of experimental data cite:huang-1991-cu-pd. Experiments based on the kinetics of the Cu-Pd phase transformation have determined the boundary between the A1 and B2 phase at a composition of 55 at% Pd cite:novikova-2014-deter-temper. Although several experimental studies have been performed, the phase boundaries between Cu-Pd fcc and Cu-Pd bcc are still not determined completely. One reason for this is the low transformation rate, especially at compositions with Pd content greater than 50 at%. Only a small fraction of the transformed phase can be observed during the long and slow cooling process which makes it difficult to accurately determine the phase boundary at low temperatures cite:novikova-2014-deter-temper.
+
+First-principles approaches have been used in the calculation of thermodynamic properties of alloys for decades. A commonly used tool is the cluster expansion (CE) combined with Monte Carlo (MC) simulation cite:sanchez-1984-gener-clust,wei-1990-first-princ,paufler-1992-order-phase,fontaine-1994-clust-approac,zunger-1994-first-princ. The CE approach builds an effective Hamiltonian for the configurational energy of a lattice as a function of occupation variables describing the arrangement of atoms cite:walle-2002-alloy-theor,chinnappan-2016-first-princ. This Hamiltonian can be utilized in a MC simulation to calculate properties of the alloy, such as the free energies and phase boundaries cite:walle-2002-autom-first,walle-2002-self-driven,walle-2002-alloy-theor. For example, it has been used to model the phase behavior of the Cu-Li system based on MC simulation cite:walle-2004-first-princ. While reporting a similar phase diagram to experimental result, the author considered the effects of vibrational entropy and predicted the existence of a phase transition observed in electrochemical measurements cite:walle-2004-first-princ. 
+
+The CE and MC simulation approach was used to calculate phase diagrams of Ti-V, Ti-Nb, and Ti-Ta binary alloys cite:chinnappan-2016-first-princ. These MC simulations included the effect of vibrational free energy and reproduced the experimental phase diagrams. The phase diagram of the Cu-Pd system has also been examined with the CE+MC simulation method cite:teeriniemi-2015-first-princ. However, only configurational excess free energy is considered in that work. Neither the order-disorder transition temperature nor the basic features of phase boundary between fcc and bcc is quantitatively consistent with experimental results. This inconsistency may be due to the lack of consideration of vibrational free energy which was found to be critical to reproduce experimental phase diagrams in other systems cite:sluiter-1990-first-princ,sanchez-1991-first-princ,chinnappan-2016-first-princ.  
+
+In this work, we utilized density functional theory (DFT) calculations to construct a CE of a Cu-Pd alloy on an fcc and bcc lattice. We utilized MC simulation to trace the phase boundaries as a function of temperature, including the effects of vibrational free energies through an approximate model. The resulting Cu-Pd phase diagram agrees better with the  experimental diagram than previous work and the vibrational free energy was found to be important to improving the agreement of the phase boundary between the fcc and B2 phase in the Cu rich region.
+ 
+* Methods
+
+** DFT calculations
+
+DFT calculations were performed using VASP cite:kresse-1994-molec-dynam,kresse-1996-effic-iterat, with the Perdew-Burke-Ernzerhof (PBE) exchange-correlation functional cite:perdew-1996-gener-gradien. The projector augmented-wave potentials cite:blochl-1994-projec-augmen,kresse-1999-from-ultras were used for the core electrons. A well-converged energy cutoff of 500 eV was utilized with a /k/-point mesh of at least 4000 /k/-points per reciprocal atom distributed as uniformly as possible in a Monkhorst-Pack grid cite:monkhorst-1976-special-point. With these parameters the total energy converges to 2 meV/atom.
+
+** Cluster expansion
+
+We constructed the CE using the ATAT package and its interface with the MAPS code cite:walle-2002-alloy-theor,walle-2002-autom-first. In this work, a separate CE was performed on the Cu-Pd fcc and bcc lattices. In the first step, all the structures of fcc and bcc configurations were relaxed at constant shape. Next, only the structures with significant differences between the DFT calculated energy and CE predicted energy were fully relaxed in both shape and volume and checked for their relaxation. Structures with relaxed shapes far from the ideal lattice geometry were excluded from the database since they are not likely to be consistent with the underlying lattice anymore. The criteria for exclusion is a strain tensor of the unit cell relaxation which does not have a norm that exceeds 0.05 (where the norm is defined as the square root of the sum of the squares of each element of the tensor) cite:chinnappan-2016-first-princ. Too large a strain tensor may indicate the structure has changed to another lattice and including them into the CE would result in reduced fitting accuracy. The effective cluster interactions (ECI) were selected using the MAPS code based on minimizing the leave-one-out cross-validation score (CVS) between DFT computation results and prediction values from the CE. After the fitting, the number of ECI is further optimized by manually reducing several four-atoms ECIs until the CVS increases or the ground state energy predictions become less accurate.
+
+
+** Vibrational free energy
+
+The CE usually only considers the configurational free energy. However, vibrational free energy was found to have a critical influence on phase equilibrium in some cases for noble metal alloys cite:Ozolins-1998-first-princ. The vibrational free energy can be obtained through computation of the force-constant tensor and phonon spectrum of all the ordered structures, but this is computationally quite costly. Alternatively, the stiffness of nearest-neighbor chemical bonds was found to be transferable through various structures of Pd-V and Cu-Au-Pd alloy systems cite:walle-2000-first-princ,wu-2003-using-bond. A method to estimate the vibrational free energy based on the stiffness versus the bond length was developed and utilized to calculate vibrational free energy with lower computational cost. In this work, four ground state structures for the fcc lattice (\ce{Cu}, \ce{Pd}, \ce{Cu3Pd} L1_{2} and \ce{CuPd3} L1_{2} structures) and five structures for the bcc lattice (\ce{Cu}, \ce{Pd}, \ce{CuPd}, \ce{CuPd3}, \ce{Cu5Pd3} structures) were considered. The selected structures had no noticeable shape change upon relaxation. 
+
+Static calculations were performed on super-cells with small displacements in the range of 0.02 to 0.035 \AA cite:alfe-2009-phon and radius in the range of 8.4 to 9 \AA which is more than three times the distance of nearest-neighbors cite:walle-2002-alloy-theor. The convergence of the static calculations with various energy cutoff, /k/-points density, and super-cell radius were tested and the results are shown in the supporting information. In the convergence of displacement of the atoms, the method of Methfessel-Paxton cite:methfessel-1989-high-precis (ISMEAR = 1) with sigma = 0.2 eV was found to be important to obtain the correct trend of stiffness versus bond length. The corresponding bond-length-dependent force constants were fitted to first-order (for the fcc lattice) and seventh-order polynomials (for the bcc lattice) as a function of bond length. The vibrational free energy is calculated based on the stiffness versus bond length method cite:walle-2004-first-princ and thermal expansion is considered through quasi-harmonic approximation cite:alfe-2009-phon with volume expansion of 1%. In the supporting information, the effect of volume expansion is also discussed.  
+
+
+
+** Calculation of the phase diagram
+
+In the present work, the phase boundary between the fcc and bcc structures was traced by the PHb program in ATAT cite:walle-2002-self-driven,walle-2002-alloy-theor,walle-2002-autom-first, which utilizes a Monte Carlo (MC) simulation to determine the energy of structures at selected temperatures and traces the phase boundary between two phases cite:walle-2002-self-driven. A brief description of the program is represented there. At 0 K, the chemical potential is determined by a simple common tangent construction based on the energy and composition of each ground state and each phase has same potential. As the reciprocal temperature \beta increases (d\beta), the changes in the chemical potential required to remain the equality between each phase's thermodynamic potential can be found based on Eq. eqref:eq:2. 
+
+
+\begin{equation}\label{eq:2}
+ d\mu/d\beta = (E^{\gamma} - E^{\alpha})/\beta/(x^{\gamma}-x^{\alpha} - \mu/\beta) 
+\end{equation}     
+
+
+Eq. eqref:eq:2 represents the relationship between chemical potential, reciprocal temperature and concentration of two phases. The E^{\alpha} and x^{\alpha} are the energy and concentration of phase \alpha at the reciprocal temperature \beta. The required thermodynamic quantities can be obtained from MC simulation. After iterating this process, the path of chemical potential \mu can be found and the concentration of each phases in equilibrium can be determined as a function of temperature. 
+
+
+
+* Results and Discussion
+Table ref:tab-fe shows the formation energies and lattice constants for ordered structures. Our results of lattice constants are in close agreement with the literature cite:teeriniemi-2015-first-princ. The resulting formation energies were utilized to fit CE Hamiltonians and to generate convex hulls that are shown in Figure ref:fig-ce (a) and (b). Our CEs for Cu-Pd bcc and Cu-Pd fcc are ultimately parameterized from 65 and 69 different configurations, respectively. The ground state search for bcc and fcc phases included configurations of Cu and Pd up to eight atoms. The effective cluster interactions in the corresponding CE are represented in Figure ref:fig-ce (c) and (d). The fcc Cu-Pd CE contains 15 two-atom, 20 three-atom, and 5 four-atom clusters. The bcc Cu-Pd CE contained 17 two-atom, 17 three-atom, and 1 four-atom clusters. The CVS is about 5 meV/atom for CE in both Cu-Pd fcc and bcc lattice, which is much lower than the recommended value of 25 meV/atom cite:walle-2002-alloy-theor.   
+
+ 
+#+attr_latex: :placement [H] 
+#+caption: The enthalpies of formation (meV/atom), lattice parameters(\AA) of ordered structures.  label:tab-fe
+| Ordered Structure | H_{f} from fcc elements | Lattice Parameter (\AA) |
+|-------------------+-------------------------+-------------------------|
+| Cu, bcc           | -41  this study         |                   2.888 |
+|                   | -33  PBE                |                 2.9 PBE |
+| Pd, bcc           | -44  this study         |                   3.137 |
+|                   | -36  PBE                |                3.15 PBE |
+| Cu, fcc           | 0  this study           |                   3.635 |
+|                   |                         |               3.632 PBE |
+| Pd, fcc           | 0  this study           |                   3.941 |
+|                   |                         |               3.878 PBE |
+| CuPd, B2          | -119 this study         |                   3.015 |
+|                   | -120 PBE                |                3.01 PBE |
+| Cu3Pd,L1_{2}      | -103 this study         |                   3.723 |
+|                   | -101 PBE                |                3.73 PBE |
+| Cu4Pd4, A1        | -102 this study         |                   3.806 |
+| CuPd3, L1_{2}     | -72 this study          |                   3.874 |
+|                   | -74 PBE                 |                3.89 PBE |
+
+
+
+#+caption: Formation energies of Cu-Pd calculated by VASP and predicted by cluster expansion plotted on (a) the convex hull of Cu-Pd fcc and (b) the convex hull of Cu-Pd bcc. (c) ECIs for the Cu-Pd fcc lattice and (d) ECIs for the Cu-Pd bcc lattice.  label:fig-ce
+[[./images-si/fcc-bcc-convexhull.png]]
+
+
+A MC simulation was conducted to trace the phase boundary between the L1_{2} and B2 structures. The choice of phases considered is discussed in the supporting information. The A1 ground state structure between the L1_{2} and B2 structures was neglected. Figure ref:fig-p is the resulting phase diagram. Our results show that the L1_{2} and B2 phases are the most stable phases in the Cu rich side and the shape of the phase diagram is very similar to the experimentally known phase diagram cite:novikova-2014-deter-temper. There are a few discrepancies with the experimental phase diagram in Figure ref:fig-p: (a) The order-disordered transition temperature is around 720 K which is lower than the experimental value (823 K); (b) The concentration at the critical point should be shifted further into the Cu-rich side, but in this simulation the critical composition is very close to 50 % Pd; (c) The B2 region is too narrow compared with the experimental phase diagram. In the next section, we conduct a detailed investigation on the effect of vibrational free energy on the phase diagram.
+
+#+caption:Phase diagram of Cu-Pd alloy without vibrational free energy cite:li-2008-therm-model-cu. label:fig-p
+ [[./images-si/figure1.png]]
+
+
+
+
+#+attr_latex: :placement [H] :align | c | p{4cm} | p{4cm} | p{3cm} | p{3cm} |
+#+caption: Critical temperature Tc (in K) and critical composition (x_{Pd}) obtained through computational and experimental methods.label:tab-sim
+|--------+-------------------------------------------------------+----------------------------------------------------+---------------------------------------------------+----------------------------------------------|
+|        | CE-MC method without vibrational entropy (this study) | CE-MC method with vibrational entropy (this study) | CE-MC simulation cite:teeriniemi-2015-first-princ | Experimental cite:novikova-2014-deter-temper |
+|--------+-------------------------------------------------------+----------------------------------------------------+---------------------------------------------------+----------------------------------------------|
+| Tc     |                                                   720 |                                                700 |                                               602 |                                          823 |
+| x_{Pd} |                                                  0.48 |                                              0.479 |                                              0.48 |                                          0.4 |
+|--------+-------------------------------------------------------+----------------------------------------------------+---------------------------------------------------+----------------------------------------------|
+
+
+** Calculation of vibrational free energy
+
+Vibrational free energy contributions of the fcc and bcc Cu-Pd lattices were calculated based on the stiffness versus bond length method cite:wu-2003-using-bond,walle-2004-first-princ,chinnappan-2016-first-princ. The calculated full force constant matrices were transformed into the stretching-bending force constant model with the results plotted in Figures ref:fig-combine. In Figure ref:fig-combine, the different bond lengths correspond to equilibrium bond lengths in the fcc and bcc structures. Due to the different number of first and second nearest neighbors, bcc Cu-Pd lattice shows more vibrational modes than fcc Cu-Pd lattice in Figure ref:fig-combine. Therefore the stiffness of bonds changes from fcc to bcc. The comparation between stretching and bending mode is shown in the supporting information. For all pair types, the force constant stiffness for the stretching term decreases with increasing bond length. Bending terms, by contrast, are relatively insensitive and the magnitude is much lower than that of stretching term. For this reason, only stretching constants are considered in our calculation of the vibrational free energy.
+
+
+#+caption: Nearest neighbor stretching force constants of Cu-Pd, Cu-Cu, and Pd-Pd bonds as a function of bond length for both the fcc and bcc lattice. label:fig-combine
+[[./images-si/combine-fit.png]]
+
+** Computed phase boundary with vibrational free energy
+
+The phase diagram of the Cu-Pd system computed with and without vibrational free energy is shown in Figure ref:fig-vib-novib. The corresponding critical temperature and composition are presented in Table ref:tab-sim. It is evident that the order-disorder transition temperature is slightly reduced when vibrational free energy is considered in the construction of phase boundary. However, the B2 phase region expands with introduction of vibrational free energy and the critical point moves deeper into the Cu-rich region which is in better agreement with the experimental phase diagram. This demonstrates that the vibrational free energy is essential to further improve the phase boundary. We did not consider more advanced treatments of vibrational free energy, such as a full phonon mode calculation. These may further improve the agreement. 
+
+#+caption: Phase boundary with and without vibrational free energy. label:fig-vib-novib
+[[./images-si/figure3.png]]
+
+** Discussion 
+
+Our calculated transition temperature is around 720 K which is lower than the reported experimental value of 823 K. This disagreement could be due to multiple reasons. First, the fitting of the CE and DFT calculations are converged to within 2 meV/atom. Energetic difference of 1-3 meV/atom can change the transition temperature by up to 15 K. A simple evaluation of this can be found in the supporting information. Second, different functionals also affect formation energies cite:zhang-2014-nonloc-first and small differences in relative formation energies can impact the transition temperature as well. The evaluation of the heat of formation based on various functionals is shown in the supporting information. Third, our calculation does not consider the effect of vacancies which were found to modify the order-disorder transition and phase diagram of the Ni-Al alloy cite:lechermann-2000-statis-mechan. To gain further insight into the expansion of the B2 phase region, vibrational free energies of both \ce{CuPd} ordered fcc and bcc phases were calculated. Their contributions to heat of formation are shown in Figure ref:fig-subplot.
+
+#+caption:Left panel: Effect of vibrational free energy on convex hull of fcc and bcc. Right panel: Difference of normalized vibrational free energy in fcc and bcc lattice. label:fig-subplot
+ [[./images-si/subplot.png]]
+
+Figure ref:fig-subplot represents the contribution of vibrational free energy to the total heat of formation. All the vibrational free energies are normalized by the vibrational free energies of the pure Cu and pure Pd fcc lattice. The left panel of Figure ref:fig-subplot shows that the vibrational free energy decreases the heats of formation of both the bcc and fcc lattices as temperature increases. In the right panel of Figure ref:fig-subplot, it is clear that  the vibrational free energy of the bcc lattice with 50 at% of Pd is lower than that of the fcc lattice at the same composition. Also, the vibrational free energy of the bcc lattice at 25 at% of Pd is lower than that of the fcc lattice at 25 at% of Pd. This indicates that the ordered bcc structure has lower vibrational free energy than the ordered fcc structure within the composition range from 25 to 50 at% of Pd, which contributes to the stability of the B2 phase. This difference in vibrational energy is linked to bond stiffness which is influenced by different equilibrium bond lengths between the fcc and bcc lattices. 
+
+When vibrational properties are considered in the order-disorder transition between bcc and disordered fcc lattices, the critical temperature tends to decrease by 20 K. This small decrease can be explained through the equation for the transition temperature cite:Ozolins-1998-first-princ. The transition temperature $T_{c}$ is given approximately by $T_c=T_{c,configuration}\times(1+(\delta S_{vib}^{ord} + \Delta_{qh}/2)/\delta S_{conf}^{ord})^{-1}$, where $T_{c,configuration}$ is the transition temperature without vibrations, $S_{conf}^{ord}$ is the configurational entropy of ordered alloy, $S_{vib}^{ord}$ is the vibrational entropy of ordered alloy, and $\Delta_{qh}=\delta S_{vib,qh}^{ord} - \delta S_{vib,h}^{ord}$ is a quasiharmonic (qh) correction for thermal expansion. Due to the effect of phonon softening in the disordered phase, small contributions from ordering vibrational entropy $\delta S_{vib}^{ord}$ will eventually reduce the transition temperature by a certain amount.
+
+
+
+* Conclusion
+
+We used density functional theory in conjunction with cluster expansions techniques and Monte Carlo simulations to compute the Cu-Pd phase diagram including the fcc and B2 regions. The agreement with experiment for the simplest approach was qualitatively correct. However, the width of the B2 region and order-disordered transition temperature are underestimated. We improved the agreement by incorporating vibrational free energy contributions through a stiffness versus bond length method. The introduction of vibrational free energy is found to increase the width of the B2 region. The B2 lattice was found to have much lower vibrational free energy than the fcc lattice at the same composition. In this case, the B2 lattice becomes more favorable over the fcc lattice as temperature increases and the B2 region in the phase diagram becomes more consistent with experimental results. This work clearly demonstrates the importance of vibrational free energy in the phase equilibrium between Cu-Pd fcc and Cu-Pd bcc lattices.
+
+
+* Acknowledgement
+
+We would like to thank Axel van de Walle for helpful advice on using ATAT in this work.
+
+* References
+ 
+bibliographystyle:elsarticle-num
+bibliography:references.bib
+
+
+
+
+* build								   :noexport:
+
+The images have bitmaps in them, so we have be careful converting them to EPS.
+
+#+BEGIN_SRC emacs-lisp
+(ox-manuscript-build-submission-manuscript)
+(ox-manuscript-make-submission-archive nil nil nil nil nil  "supporting-information.pdf")
+#+END_SRC
+
+#+RESULTS:
+: manuscript-2017-01-28/
+
+

@@ -1,0 +1,4273 @@
+
+#+LATEX_CLASS: elsarticle
+#+LATEX_CLASS_OPTIONS: [number, sort&compress, review, 12pt]
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+OPTIONS: toc:nil ^:{} author:nil
+
+#+latex_header: \usepackage[utf8]{inputenc}
+#+latex_header: \usepackage{fixltx2e}
+#+latex_header: \usepackage{url}
+#+latex_header: \usepackage[version=3]{mhchem}
+#+latex_header: \usepackage{graphicx}
+#+latex_header: \usepackage{tcolorbox}
+#+latex_header: \usepackage{color}
+#+latex_header: \usepackage{amsmath}
+#+latex_header: \usepackage{textcomp}
+#+latex_header: \usepackage{wasysym}
+#+latex_header: \usepackage{latexsym}
+#+latex_header: \usepackage{amssymb}
+#+LATEX_HEADER: \usepackage[linktocpage,
+#+LATEX_HEADER:   pdfstartview=FitH,
+#+LATEX_HEADER:   colorlinks,
+#+LATEX_HEADER:   linkcolor=blue,
+#+LATEX_HEADER:   anchorcolor=blue,
+#+LATEX_HEADER:   citecolor=blue,
+#+LATEX_HEADER:   filecolor=blue,
+#+LATEX_HEADER:   menucolor=blue,
+#+LATEX_HEADER:   urlcolor=blue]{hyperref}
+#+latex_header: \usepackage{float}
+#+latex_header: \usepackage{minted}
+
+\begin{frontmatter}
+\title{Supporting Information - First-principles study of phase equilibrium in Cu-Pd alloy}
+\author[cmu]{Feiyang Geng}
+\author[cmu]{Jacob R. Boes}
+\author[cmu]{John R. Kitchin\corref{cor}}
+\ead{jkitchin@andrew.cmu.edu}
+\address[cmu]{Department of Chemical Engineering, Carnegie Mellon University, Pittsburgh, PA 15213}
+\cortext[cor]{Corresponding author}
+\end{frontmatter}
+
+\tableofcontents
+
+* Introduction
+** Introduction to the SI
+This document contains the supporting data for this work. The figures and corresponding codes to generate figures are provided for reproducibility and transparency. All the calculation results of cluster expansion is based on ATAT package from Alex Van de Walle. Because most of the data is generated through ATAT and stored in a tar.gz file, one can reproduce our results by installing ATAT to use our shared raw data. ATAT and relevant documents can be found at
+https://www.brown.edu/Departments/Engineering/Labs/avdw/atat/.
+
+** Guidance for using raw data 
+
+There are several parts of the data that is important to reproduce this work. a) data of basic cluster expansion parameters we developed (ECIs, clusters, structure information). b) Calculation results for vibrational free energy and cluster expansion (ECIs, vibrational free energies). c) The code used in construction of the phase diagram. 
+
+In the first step, basic cluster expansion is stored in a zipped file which can be found in https://github.com/KitchinHUB/kitchingroup-XX. Please download the "CE-novib.tar.gz" in the github. After downloading the file to a directory, you can extract the file in the following code:
+
+#+BEGIN_SRC python :results output org drawer
+tar -zxvf CE-novib.tar.gz
+#+END_SRC
+
+There are two folders in the file which represents the cluster expansion of CuPd bcc and fcc lattice. 
+
+Note that all the POTCAR and OUTCAR files  have been deleted due to license restrictions and to reduce file size. To get further information of the structures, the DFT calculations can be reproduced through ATAT and the vasp.wrap file which contains all the parameter used. Fitting of the cluster expansion does not need any other calculations. The eci.out and clusters.out file contains all the information about the ECIs we use and nbclusters.in is used to reduce several 4-atoms ECIs obtained from MAPS algorithm. The following command will perform the fitting of cluster expansion.
+
+#+BEGIN_SRC python :results output org drawer
+maps -d
+#+END_SRC
+ 
+After the CE is ready, a phase diagram without vibrational free energy can be reproduced by the following command.
+
+#+BEGIN_SRC python :results output org drawer
+phb -d1=CuPd_bcc/ -d2=CuPd_fcc/ -gs1=1 -gs2=3 -dT=10 -dx=1e-3 -tstat=3 -er=35 -ltep=5e-3 -keV -o=phb01.out
+#+END_SRC
+
+Note that the -d1 = .../ is the direction of each cluster expansion. -gs1=1 indicates the first phase is the second ground state (L12 structure) in the cluster expansion of CuPd fcc. -gs2=3 indicates second phase is the fourth ground state (CuPd B2 structure) in the cluster expansion of CuPd bcc. The temperature interval is 10 K, the accuracy of the phase boundary is 0.001. The radius of super-cell is 35 $\AA$. -ltep=5e-3 indicates the Low Temperature Expansion (LTE) should be used instead of MC simulation when its accuracy is better than 5
+×10^{-3} eV cite:walle-2002-autom-first,walle-2002-alloy-theor. 
+
+The output of phase boundaries is stored in phb01.out file. This file contains data like this
+
+#+BEGIN_EXAMPLE
+330	-0.0357044	-0.492946	-0.0208088	-0.119509	-0.118761	
+340	-0.0357539	-0.491726	-0.0234675	-0.11944	-0.118627	
+350	-0.0358065	-0.49033	-0.0260033	-0.119358	-0.118502	
+360	-0.03586	-0.488726	-0.0288523	-0.119259	-0.11836	
+370	-0.0359151	-0.487051	-0.0316699	-0.119156	-0.118223	
+380	-0.0359709	-0.437098	-0.0346087	-0.119559	-0.118081	
+390	-0.0360882	-0.394105	-0.0373727	-0.119112	-0.117949	
+400	-0.0361653	-0.39122	-0.040336	-0.118867	-0.117809	
+#+END_EXAMPLE
+
+Note that the meaning of six columns above is : Temperature (K), chemical potential, composition of L12 phase (range from -1 to 1), composition of B2 phase (range from -1 to 1), energy of L12 phase and the energy of B2 phase.   
+
+It is clear that at 380 K, the composition of L12 phase has a obvious change (from -0.487 at 370 K to -0.437 at 380 K) which indicates a phase transition from ordered phase to disordered phase. Therefore, L12 structure is replaced with disordered fcc based on following command.
+ 
+#+BEGIN_SRC python :results output org drawer
+phb -T=380 -mu=-0.0359709  -d1=CuPd_bcc/ -d2=CuPd_fcc/ -gs1=-1 -gs2=3 -dT=10 -dx=1e-3 -tstat=3 -er=35 -ltep=5e-3 -keV -o=phb02.out
+#+END_SRC
+
+The summarized data of phase diagram is stored in "novib-0-0.5.txt" and "novib-0.5-0.75.txt". First and third columns in those txt files are compositions of Pd on the phase boundaries. Second and fourth columns are lists of temperature corresponding to the composition in the same row. More details about the PHb program can be found in Refs. citenum:walle-2002-self-driven,walle-2002-autom-first. 
+
+In the next step, the vibrational free energy is considered in the cluster expansion. The calculation of the vibrational free energy is based on displacement of the atoms by 0.035 $\AA$ for fcc and 0.02 $\AA$ for bcc. Details of these calculations can be found in stiffness-fcc.tar.gz and stiffness-bcc-tar.gz files. The following commands can be used to extract the files.
+
+#+BEGIN_SRC python :results output org drawer
+tar -zxvf stiffness-fcc.tar.gz 
+tar -zxvf stiffness-bcc.tar.gz
+#+END_SRC
+
+All the fitted result of stiffness versus bond length is stored in the slspring.out file in each of the directories and then used to calculate the vibrational free energy. The calculation result and corresponding cluster expansion is stored in CE-vib-fcc.tar.gz and CE-vib-bcc.tar.gz files, which can be extracted as: 
+
+#+BEGIN_SRC python :results output org drawer
+tar -zxvf CE-vib-fcc.tar.gz 
+tar -zxvf CE-vib-bcc.tar.gz
+#+END_SRC
+
+Vibrational free energy results are kept in all the fvib file in each structure. The following code is used to calculate vibrational free energy.
+
+#+BEGIN_SRC python :results output org drawer
+cd ~/CuPd_fcc_vib/
+echo 1000 1001 > Trange.in
+foreachfile str_relax.out pwd /; svsl -pa -ns=5 -ms=0.01 -sig=6
+clusterexpand -pa -cv fvib
+mkteci fvib.eci
+#+END_SRC
+
+When the CE is ready, users can repeat the previous steps to run the PHb program to create a phase diagram. The calculation result is summaried in a txt file called "dt10-vib.txt" in the same directory as cluster expansion files.  
+
+* Convergence studies
+** Convergence of DFT calculation 
+*** DFT calculations in cluster expansion
+In the cluster expansion, the PBE functional was used to calculate energies of all the structures. Convergence on energy cutoff for various structures in CuPd bcc and fcc lattice was performed. The energy cutoff changes from 350 eV to 600 eV and number of k-points per reciprocal atom is set to be 2000. An energy cutoff of 500 eV is found to be sufficient to convergence of 1 meV/atom. Convergence on density of /k/-points grid was also tested. The number of k-points per reciprocal atom was changed from 1000 to 10000. For structures with 1-8 atoms, 4000 k-points per reciprocal atom is found to be sufficient to converge within 1-2 meV/atom. In cluster expansion, the number of k-points per reciprocal atom is set to be 4000. 
+
+*** Summary of converged energy cutoff and k-points in different functionals (PBE, PBEsol, LDA, AMO5)
+In order to reach convergence of 1 meV/atom, we increase energy cutoff and density of /k/-points respectively and the resulting parameters in various functionals are summarized in following tables ref:tag-PBE, ref:tag-PBEsol, ref:tag-AMO5, ref:tag-LDA. Several examples that inlustrates how we performed those calculations can be found in Appendix part.  
+#+attr_latex: :placement [H]
+#+caption: Parameter sets for converged results on ground state structures with PBE functional (convergence level is 1 meV/atom). label:tag-PBE 
+| structure  | converged encut | converged /k/-points density | functional |
+| Cu  bcc    |             500 | 16\times16\times16         | PBE        |
+| Pd  bcc    |             500 | 16\times16\times16         | PBE        |
+| Cu5Pd3 bcc |             500 | 10\times10\times10         | PBE        |
+| CuPd bcc   |             500 | 10\times10\times10         | PBE        |
+| CuPd bcc   |             500 | 13\times13\times13         | PBE        |
+| Cu6Pd2 bcc |             500 | 10\times10\times10         | PBE        |
+| CuPd bcc   |             500 | 10\times10\times10         | PBE        |
+| CuPd bcc   |             500 | 16\times16\times16         | PBE        |
+| Pd fcc     |             500 | 16\times16\times16         | PBE        |
+| Cu3Pd L12  |             500 | 13\times13\times13         | PBE        |
+| CuPd3 L12  |             500 | 13\times13\times13         | PBE        |
+| Cu5Pd3 fcc |             500 | 10\times10\times10         | PBE        |
+| Cu4Pd4 fcc |             500 | 10\times10\times10         | PBE        |
+| Cu3Pd5 fcc |             500 | 10\times10\times10         | PBE        |
+#+attr_latex: :placement [H]
+#+caption: Parameter sets for converged results on ground state structures with PBEsol functional (convergence level is 1 meV/atom). label:tag-PBEsol
+| structure  | converged encut | converged /k/-points density | functional |
+| Cu  bcc    |             500 | 22\times22\times22         | PBEsol     |
+| Pd  bcc    |             500 | 23\times23\times23         | PBEsol     |
+| Cu5Pd3 bcc |             500 | 14\times14\times14         | PBEsol     |
+| Cu6Pd2 bcc |             500 | 17\times17\times17         | PBEsol     |
+| CuPd bcc   |             500 | 13\times13\times13         | PBEsol     |
+| Cu fcc     |             500 | 23\times23\times23         | PBEsol     |
+| Pd fcc     |             500 | 24\times24\times24         | PBEsol     |
+| Cu3Pd L12  |             500 | 17\times17\times17         | PBEsol     |
+| CuPd3 L12  |             500 | 19\times19\times19         | PBEsol     |
+| Cu5Pd3 fcc |             500 | 17\times17\times17         | PBEsol     |
+| Cu4Pd4 fcc |             500 | 16\times16\times16         | PBEsol     |
+| Cu3Pd5 fcc |             500 | 14\times14\times14         | PBEsol     |
+#+attr_latex: :placement [H]
+#+caption: Converged study result on ground state structures with AMO5 functional (Convergence level is 1 meV/atom). label:tag-AMO5
+| structure  | converged encut | converged /k/-points density | functional |
+| Cu  bcc    |             500 | 19\times19\times19         | AMO5       |
+| Pd  bcc    |             500 | 23\times23\times23         | AMO5       |
+| Cu5Pd3 bcc |             500 | 14\times14\times14         | AMO5       |
+| Cu6Pd2 bcc |             500 | 16\times16\times16         | AMO5       |
+| CuPd bcc   |             500 | 13\times13\times13         | AMO5       |
+| Cu fcc     |             500 | 22\times22\times22         | AMO5       |
+| Pd fcc     |             500 | 24\times24\times24         | AMO5       |
+| Cu3Pd L12  |             500 | 20\times20\times20         | AMO5       |
+| CuPd3 L12  |             500 | 18\times18\times18         | AMO5       |
+| Cu5Pd3 fcc |             500 | 15\times15\times15         | AMO5       |
+| Cu4Pd4 fcc |             500 | 14\times14\times14         | AMO5       |
+| Cu3Pd5 fcc |             500 | 14\times14\times14         | AMO5       |
+#+attr_latex: :placement [H]
+#+caption:Converged study result on ground state structures with LDA functional (Convergence level is 1 meV/atom). label:tag-LDA
+| structure  | converged encut | converged /k/-points density | functional |
+| Cu  bcc    |             500 | 24\times24\times24                   | LDA        |
+| Pd  bcc    |             500 | 23\times23\times23                   | LDA        |
+| Cu5Pd3 bcc |             500 | 19\times19\times19                   | LDA        |
+| Cu6Pd2 bcc |             500 | 16\times16\times16                   | LDA        |
+| CuPd bcc   |             500 | 13\times13\times13                   | LDA        |
+| Cu fcc     |             500 | 17\times17\times17                   | LDA        |
+| Pd fcc     |             500 | 24\times24\times24                   | LDA        |
+| Cu3Pd L12  |             500 | 17\times17\times17                   | LDA        |
+| CuPd3 L12  |             500 | 19\times19\times19                   | LDA        |
+| Cu5Pd3 fcc |             500 | 13\times13\times13                   | LDA        |
+| Cu4Pd4 fcc |             500 | 15\times15\times15                   | LDA        |
+| Cu3Pd5 fcc |             500 | 15\times15\times15                   | LDA        |
+
+** Convergence of stiffness of bonds on energy cutoff
+
+Before the fitting of stiffness of stretching and bending force constants as function of bond length, a convergence test is needed to determine preferable parameters for static calculation. 
+
+We generated super-cell structure of B2 with displacement of perturbed atom for four compositions (Cu, Pd, CuPd, Cu5Pd3). The displacement is chosen to be 0.02 $\AA$ and radius of super-cell is set to be 9 $\AA$ which is more than three times the distance between nearest neighbors. The sufficiently large radius is of necessity so as to make sure the element of force constant matrix falls to negligable value at the boundary of super-cell. The isotropic strain of 1% is applied in order to determine the volume dependent of spring constant. Besides, two volumes are sampled which is the minimum requirement to determine the relationship between bond stiffness and bond length cite:walle-2002-alloy-theor.
+
+The energy cutoff increases from 350 to 500 eV and /k/-points grid remains at 7×7×7. After all the calculations, the relationship between stiffness and bond length is determined by least-square fitting. Figure ref:fig-cucu describes the relationship between stiffness and bond length for Cu-Cu bond. As energy cutoff increases, the change of stiffness at various bond length is negligible which indicates the convergence of stiffness at energy cutoff of 350 eV.
+
+#+caption: Bond-length-dependent stiffness of Cu-Cu bond with various energy cutoff. The left plot represents Cu-Cu stretching mode and right one represent Cu-Cu bending mode (dr means displacement of perturbed atom). label:fig-cucu 
+#+attr_latex: :placement [H]
+[[./images-si/Cu-Cu-testencut.png]]
+
+Figure ref:fig-cupd is the relationship between stiffness and bond length for Cu-Pd bond. It is clear that larger energy cutoff does not make obvious change to the trend of stiffness versus bond length. In order to reduce the computational cost, energy cutoff is chosen to be 350 eV.
+ 
+#+caption:Bond-length-dependent stiffness of Cu-Pd bond with various energy cutoff. The left plot represents Cu-Pd stretching mode and right one represent Cu-Pd bending mode (dr means displacement of perturbed atom). label:fig-cupd 
+#+ATTR_LATEX: :placement [H]
+[[./images-si/Cu-Pd-testencut.png]]
+
+Figure ref:fig-pdpd represent the trend of bond-length-dependent stiffness of Pd-Pd bond as a function of energy cutoff. Although energy cutoff changes from 350 to 500 eV, the change of stiffness for both stretching and bending mode is within 0.02 $eV/{\AA}^2$. Therefore, energy cutoff of 350 eV is sufficient for convergence of stiffness within 0.02 $eV/{\AA}^2$.
+
+#+caption: Bond-length-dependent stiffness of Pd-Pd bond with various energy cutoff. The left plot represents Pd-Pd stretching mode and right one represent Pd-Pd bending mode (dr means displacement of perturbed atom). label:fig-pdpd
+#+ATTR_LATEX: :placement [H]
+[[./images-si/Pd-Pd-testencut.png]]
+
+** Convergence of bond-length-dependent force constant on density of k-point grid
+
+In this section, we generated super-cell structure of B2 with displacement of perturbed atom for four compositions (Cu, Pd, CuPd, Cu5Pd3) of bcc lattice. The displacement is chosen to be 0.02 $\AA$ and radius of super-cell-is set to be 9 $\AA$ which is more than three times the distance between nearest neighbors. The sufficiently large radius is of necessity so as to make sure the element of force constant matrix falls to negligable value at the boundary of super-cell. The isotropic strain of 1% is applied in order to determine the volume dependent of spring constant. This parameter is important for use of quasi-harmonic approximation to calculate vibrational free energy that accounts for thermal expansion. 
+
+Density of k-points mesh increases from 5×5×5 to 10×10×10 and energy cutoff is fixed to 350 eV. After all the calculation is finished, the stiffness versus bond length is fitted automatically. From the figure ref:fig-cucukpt, it is obvious that density of k-points mesh significantly influences the stiffness of Cu-Cu bond at various bond length and the stiffness will converge to less than 0.1 $eV/{\AA}^2$ when the density of /k/-points mesh is greater than 7×7×7.
+
+#+caption: Bond-length-dependent stiffness of Cu-Cu bond with various density of K-points grid. The left plot represents Cu-Cu stretching mode and right one represent Cu-Cu bending mode (dr means displacement of perturbed atom). label:fig-cucukpt 
+#+attr_latex: :placement [H]
+[[./images-si/Cu-Cu-testkpts.png]]
+
+
+
+Figure ref:fig-cupdkpt represent the trend of bond-length dependent stiffness of Cu-Pd bond. As seen in left plot of figure ref:fig-cupdkpt, stiffness of stretching mode shows very small change as density of k-points grids increases. As for the bending mode, the stiffness of short bond length (shorter than 2.8 $\AA$) does not show significant increase in higher k-points. At longer bond length (longer than 2.8 $\AA$), the change in stiffness is noticeable, but converges at k-points mesh density of 7×7×7.
+
+
+#+caption:Bond-length-dependent stiffness of Cu-Pd bond with various density of k-points grid. The left plot represents Cu-Pd stretching mode and right one represent Cu-Pd bending mode (dr means displacement of perturbed atom). label:fig-cupdkpt 
+#+attr_latex: :placement [H]
+[[./images-si/Cu-Pd-testkpts.png]]
+Figure ref:fig-pdpdkpt shows the bond-length dependent stiffness of Pd-Pd bond. As shown in left plot of figure ref:fig-pdpdkpt, the stiffness of stretching mode of Pd-Pd bond reaches convergence of 0.05 $eV/{\AA^2}$ at k-points mesh density of 7×7×7. On the right plot of figure ref:fig-pdpdkpt, stiffness of bending mode shows small changes when density of k-points grids is larger than 7×7
+×7. 
+
+#+caption:Bond-length-dependent stiffness of Pd-Pd bond with various k-points. The left plot represents Pd-Pd stretching mode and right one represent Pd-Pd bending mode (dr means displacement of perturbed atom). label:fig-pdpdkpt
+#+attr_latex: :placement [H]
+[[./images-si/Pd-Pd-testkpts.png]]
+
+In our final result, all the calculations are performed on k-point mesh that is denser than 9×9×9 in order to reach sufficient accuracy. 
+
+
+** Choice of ISMEAR in calculation of phonon free energy
+
+ISMEAR determines how the partial occupancies are set for each wave function. We used to utilize tetrahedron method with Blöchl corrections (ISMEAR=-5). However, according to VASP manual, the only drawback is that the methods is not variational with respect to the partial occupancies, therefore the calculated forces might be wrong by a few percent for metals.  In this section, method of Methfessel-Paxton (ISMEAR=1) is used and the calculation based on energy cutoff of 350 eV and density of k-points mesh of 9×9×9 is reproduced. The result is shown in figure ref:fig-cucuismear, ref:fig-cupdismear and ref:fig-pdpdismear. 
+
+Figure ref:fig-cucuismear shows the obtained trend of stiffness versus bond length. As is shown in the figure ref:fig-cucuismear, the stiffness of Cu-Cu bond turn to positive value at bond length of around 2.9 $\AA$ when method of Methfessel-Paxton, rather than tetrahedron method with Blöchl corrections, is utilized. This indicates the error of force calculation is the source of wrong trend of stiffness versus bond length. For the right plot of figure ref:fig-cucuismear, the change in stiffness of bending mode is irregular and negligible.  
+
+
+#+caption: Bond-length-dependent stiffness of Cu-Cu bond with various ismear method. The left plot represents Cu-Cu stretching mode and right one represent Cu-Cu bending mode (dr means displacement of perturbed atom). label:fig-cucuismear
+#+attr_latex: :placement[H]
+[[./images-si/Cu-Cu-ismear.png]]
+
+Figure ref:fig-cupdismear shows the stiffness of Cu-Pd bond as a function of different ISMEAR. When  method of Methfessel-Paxton (ISMEAR=1), rather than tetrahedron method with Blöchl corrections (ISMEAR=-5), is utilized, the resulting stiffness is really close to that of tetrahedron method. The result of Cu-Pd bond vibration shows ISMEAR does not make obvious changes to stiffness of Cu-Pd bond, in both bending (the right plot )and stretching mode (the left plot).  
+
+
+#+caption: Bond-length-dependent stiffness of Cu-Pd bond with various ismear method. The left plot represents Cu-Pd stretching mode and right one represent Cu-Pd bending mode (dr means displacement of perturbed atom). label:fig-cupdismear
+#+attr_latex: :placement [H]
+[[./images-si/Cu-Pd-ismear.png]]
+
+Figure ref:fig-pdpdismear is the result of stiffness of Pd-Pd bond versus bond length. As method of Methfessel-Paxton (ISMEAR = 1), rather than tetrahedron method with Blöchl corrections (ISMEAR=-5), is utilized, the stiffness of stretching mode of Pd-Pd bond increases a little, as shown in left plot of figure ref:fig-pdpdismear. In comparison, the change of stiffness in bending mode seems random and largest difference is about 0.05 $eV/{\AA}^2$, as shown in the right plot of figure ref:fig-ppdpdismear.  
+#+attr_latex: :placement [H]
+#+caption: Bond-length-dependent stiffness of Pd-Pd bond with various ismear method. The left plot represents Pd-Pd stretching mode and right one represent Pd-Pd bending mode (dr means displacement of perturbed atom). label:fig-pdpdismear
+[[./images-si/Pd-Pd-ismear.png]]
+
+In conclusion, method of Methfessel-Pexton is found to be important for a correct value of force. The trend of stiffness will be well above zero as this method is utilized. In our final result, we use ISMEAR = 1 for all the accurate calculations.  
+
+** Convergence of bond-length-dependent force constant on displacement of atom
+*** bcc structure
+
+We generated super-cell structures of B2 with displacement of perturbed atom for five compositions (Cu, Pd, CuPd, Cu5Pd3, Cu3Pd). The displacement is chosen from 0.005 to 0.04 $\AA$ and radius of super-cell-is set to be 9 $\AA$ which is more than three times the distance between nearest neighbors. The sufficiently large radius is of necessity so as to make sure the element of force constant matrix falls to negligible value at the boundary of super-cell. The isotropic strain of 1% is applied in order to determine the volume dependent of spring constant. Besides, energy cutoff is 350 eV and k points density is fixed to 10×10×10. After all the calculations are finished, the stiffness versus bond length is fitted. The figure ref:fig-cucudis, ref:fig-cupddis, ref:fig-pdpddis are the relationship between stiffness and bond length for Cu-Cu bond, Cu-Pd bond and Pd-Pd bond respectively. 
+
+
+As for stretching mode of Cu-Cu bond, increasing displacement of atom from 0.005 to 0.04 $\AA$ does not change the stiffness, as shown in left panel of figure ref:fig-cucudis. Comparably, right panel of figure ref:fig-cucudis indicates the stiffness of bending mode is influenced by various displacements of atom. However, the dependence on displacement of atom is irregular and changes of stiffness is within 0.04 $eV/{\AA^2}$. Also most of points are below zero which is not quiet reasonable. The reason behind this observation is not yet known, but based on convergence of stiffness in stretching mode, we can conclude that displacement from 0.005 to 0.04 $\AA$ does not apparently change the stiffness of bond and therefore, the vibration mode of system is harmonic with appropriate displacement of atom.
+#+attr_latex: :placement [H]
+#+caption: Bond-length-dependent stiffness of Cu-Cu bond with various displacements of atoms. The left plot represents Cu-Cu stretching mode and right one represent Cu-Cu bending mode (dr means displacement of perturbed atom). label:fig-cucudis
+[[./images-si/Cu-Cu-testradius.png]]
+
+
+As for stretching mode of Cu-Pd bond, increasing displacement of atom from 0.005 to 0.04 $\AA$ does not change the stiffness, as shown in left panel of figure ref:fig-cupddis. Comparably, right panel of figure ref:fig-cupddis indicates the stiffness of bending mode does not depend on displacement of atom. Also most of points are below zero which is not quiet reasonable. Based on convergence of stiffness in stretching mode, we can conclude that displacement from 0.005 to 0.04 $\AA$ does not apparently change the stiffness of Cu-Pd bond and therefore, the displacement of atom within this range will lead to a harmonic vibration.  
+
+ 
+#+attr_latex: :placement [H]
+#+caption:Bond-length-dependent stiffness of Cu-Pd bond with various displacements of atoms. The left plot represents Cu-Pd stretching mode and right one represent Cu-Pd bending mode (dr means displacement of perturbed atom). label:fig-cupddis 
+[[./images-si/Cu-Pd-testradius.png]]
+
+As for stretching mode of Pd-Pd bond, increasing displacement of atom from 0.005 to 0.04 $\AA$ does not change the stiffness, as shown in left panel of figure ref:fig-pdpddis. Comparably, right panel of figure ref:fig-pdpddis indicates the stiffness of bending mode shows no dependence on displacement of atom at short bond length (< 2.9 $\AA$). As bond length increases, the dependence of displacement of atom is not significant and changes of stiffness is within 0.05 $eV/{\AA}^2$. Another important feature of right part of figure ref:fig-pdpddis is that most of points are below zero which is not quiet reasonable. The reason behind this observation is not yet known, but based on convergence of stiffness in stretching mode, we can conclude that displacement from 0.005 to 0.04 $\AA$ does not apparently change the stiffness of Pd-Pd bond and therefore, the displacement of atom within this range will result in harmonic vibration.  
+#+attr_latex: :placement [H]
+#+caption:Bond-length-dependent stiffness of Pd-Pd bond with various displacements of atoms. The left plot represents Pd-Pd stretching mode and right one represent Pd-Pd bending mode (dr means displacement of perturbed atom). label:fig-pdpddis
+[[./images-si/Pd-Pd-testradius.png]]
+
+*** fcc structure
+
+We generate super-cell structure of fcc with displacement of perturbed atom for four compositions (Cu, Pd, Cu3Pd, CuPd3). The displacement is chosen from 0.02 to 0.2 $\AA$ and radius of super-cell-is set to be 8.4 $\AA$ which is more than three times the distance between nearest neighbors. The sufficiently large radius is of necessity so as to make sure the element of force constant matrix falls to negligible value at the boundary of super-cell. The isotropic strain of 1% is applied in order to determine the volume dependent of spring constant. This parameter is important for use of quasi-harmonic approximation to calculate vibrational free energy that accounts for thermal expansion. Besides, two volumes are sampled which is the minimum requirement to determine the relationship between bond stiffness and bond length. Besides.energy cutoff is 350 eV and /k/-points density is fixed to 9×9×9. After all the calculations are finished, the stiffness versus bond length is fitted. The figure ref:fig-cucudis-fcc, ref:fig-cupddis-fcc, ref:fig-pdpddis-fcc are the relationship between stiffness and bond length for Cu-Cu bond, Cu-Pd bond and Pd-Pd bond respectively. 
+
+#+attr_latex: :placement [H] 
+#+caption: Bond-length-dependent stiffness of Cu-Cu bond with various displacements of atoms. The left plot represents Cu-Cu stretching mode and right one represent Cu-Cu bending mode (dr means displacement of perturbed atom). label:fig-cucudis-fcc
+[[./images-si/Cu-Cu-fcctestradius.png]]
+
+
+As for stretching mode of Cu-Cu bond, increasing displacement of atom from 0.02 to 0.2 $\AA$ cause a small disparity of stiffness (less than 0.05 $eV/{\AA}^2$), as shown in left panel of figure ref:fig-cucudis-fcc. The stiffness does not seems converge as displacement decreases from 0.035 to 0.02 $\AA$. The resulting stiffnesses of displacement of 0.035 and 0.05 $\AA$ are quiet consistent with each other. Therefore, the only conclusion we can reach is that stiffness converges to 0.04 $eV/{\AA}^2$ at displacement of 0.035 $\AA$. Comparably, right panel of figure ref:fig-cucudis-fcc indicates the stiffness of bending mode is influenced by various displacements of atom. However, most of points are so approaching to zero that their value can be negligible compared with stretching mode. Therefore, we ignore the bending mode and care about stretching term of stiffness.
+
+
+#+attr_latex: :placement [H]
+#+caption:Bond-length-dependent stiffness of Cu-Pd bond with various energy cutoff. The left plot represents Cu-Pd stretching mode and right one represent Cu-Pd bending mode (dr means displacement of perturbed atom). label:fig-cupddis-fcc 
+[[./images-si/Cu-Pd-fcctestradius.png]]
+
+
+As for stretching mode of Cu-Pd bond, increasing displacement of atom from 0.02 to 0.05 $\AA$ cause negligible disparity of stiffness, as shown in left panel of figure ref:fig-cupddis-fcc. Therefore, displacement of 0.035 $\AA$ is appropriate for further calculation. For the bending mode in right part of figure ref:fig-cupddis-fcc, all the values are negative and we ignore their contribution to vibrational free energy.  
+
+
+
+
+
+#+caption:Bond-length-dependent stiffness of Pd-Pd bond with various energy cutoff. The left plot represents Pd-Pd stretching mode and right one represent Pd-Pd bending mode (dr means displacement of perturbed atom). label:fig-pdpddis-fcc
+#+attr_latex: :placement [H]
+[[./images-si/Pd-Pd-fcctestradius.png]]
+ 
+
+As for stretching mode of Pd-Pd bond, increasing displacement of atom from 0.02 to 0.05 $\AA$ does not change the stiffness, as shown in left panel of figure ref:fig-pdpddis-fcc. The result indicates a convergence of stiffness as displacement is lower than 0.05 $\AA$. Comparably, right panel of figure ref:fig-pdpddis-fcc also indicates the displacement lower than 0.05 $\AA$ can result in convergence of stiffness of bending mode.
+
+** Convergence of bond-length-dependent force constant on super-cell radius
+
+Super-cell size is very important for correct bond-length-dependent force constant. Because sufficiently large radius is able to make sure the element of force constant matrix falls to negligible value a the boundary of super-cell cite:alfe-2009-phon. The recommended super-cell radius is 3-4 times nearest neighbor distance cite:walle-2002-alloy-theor. There we test force constant with super-cell radius of 7 and 8.4 $\AA$. The displacement of atom is 0.035 $\AA$ and structures considered are Cu fcc, Pd fcc, \ce{Cu3Pd} L1_{2} and \ce{CuPd3} L1_{2} structure. Converged energy cutoff is 350 eV and converged density of /k/-point mesh is 9×9×9-10×10×10. 
+Method of Methfessel-Paxton (ISMEAR=1) is used for all the calculations. From the left panel of figure ref:fig-cucu-er, ref:fig-cupd-er and ref:fig-pdpd-er below, it is very clear that the resulting stretching term of force constant at a super-cell radius of 8.4 $\AA$ is very close to that at super-cell radius of 7 $\AA$. The bending terms of vibration in right panel of figure ref:fig-cucu-er, ref:fig-cupd-er and ref:fig-pdpd-er also show no obvious change as super-cell radius enlarges. Therefore, the super-cell radius of 7-8.4 $\AA$ is sufficient to obtain accurate force constant.  
+
+#+attr_latex: :placement [H]
+#+caption: Left panel: streching term of bond-length-dependent force constant of Cu-Cu bond as a function of super-cell radius. Right panel: Bending term of bond-length-dependent force constant of Cu-Cu bond as a function of super-cell radius. label:fig-cucu-er
+[[./images-si/Cu-Cu-tester.png]]
+
+#+attr_latex: :placement [H]
+#+caption: Left panel: Stretching term of bond-length-dependent force constant of Cu-Pd bond as a function of super-cell radius. Right panel: Bending term of bond-length-dependent force constant of Cu-Pd bond as a function of super-cell radius. label:fig-cupd-er
+[[./images-si/Cu-Pd-tester.png]]
+#+attr_latex: :placement [H]
+#+caption: Left panel:Stretching term of bond-length-dependent force constant of Pd-Pd bond as a function of super-cell radius. Right panel: Bending term of bond-length dependent force constant of Pd-Pd bond as a function of super-cell radius. label:fig-pdpd-er
+[[./images-si/Pd-Pd-tester.png]]
+
+** Convergence of phase boundary on temperature interval 
+Figure ref:fig-dt-vib and figure ref:fig-dt-novib are the result of temperature interval convergence of phase diagram. The temperature interval changes from 25 K to 5 K per step. The thermal expansion is 1% and super-cell radius is 35 $\AA$. It is clear that in both diagrams, the phase boundaries converge as temperature interval is smaller than 25 K.  
+#+attr_latex: :placement [H]
+#+caption: Convergence of temperature interval in phase boundary without considering vibrational free energy. label:fig-dt-novib
+[[./images-si/novib-dT.png]]
+#+attr_latex: :placement [H]
+#+caption:Temperature interval convergence of Phase diagram between L12 and B2 phases considering vibrational free energy. label:fig-dt-vib
+[[./images-si/temperature-interval.png]]
+
+** Convergence of phase boundary on various super-cell size
+  
+Super-cell radius is evaluated to ensure the current super-cell size converge. Meanwhile, temperature interval is 10 K per step and other parameters are equal.  As is shown in figure label:fig-cell, as super-cell radius increases from 35 to 50 $\AA$, the main feature of phase boundary does not change and order-disorder transition temperature only shift around 10K. Therefore, it is convincing that phase boundary converges at super-cell radius of 35 $\AA$. 
+#+attr_latex: :placement [H]
+#+caption: Effect of super-cell radius on phase boundary without considering vibrational free energy. label:fig-cell
+[[./images-si/er.png]]
+
+* How to choose phases considered in phase diagram
+
+The convex hull for both CuPd fcc and bcc lattice is compared in figure ref:fig-compare-ce. 
+#+attr_latex: :placement [H]
+#+caption: Ground state convex hull of CuPd bcc and fcc lattice. The blue dash line indicates the phase right on the line can be as stable as mixture of L12 phase and B2 phase. label:fig-compare-ce 
+[[./images-si/CuPd-convexhull-compare.png]]
+
+As shown in Figure ref:fig-compare-ce, the formation energy of \ce{Cu5Pd3} A1 structure is right on the line between L12 structure and CuPd B2 structure. This indicates the \ce{Cu5Pd3} A1 structure is no more stable than the mixture of L12 structure and \ce{CuPd} B2 structure in 0 K. In previous literature cite:subramanian-1991-cu-pd-pallad,teeriniemi-2015-first-princ, disordered A1 phase only exists at temperature higher than 870 K. At lower temperature, L12 phase and B2 phase coexists. Therefore, we neglect the \ce{Cu5Pd3} A1 phase at 0K and only compute the phase equilibrium between L12 and B2 structures in Cu-rich region at low temperature.    
+
+* Stretching and bending mode of force constant
+In this section, a complete data of stiffness versus bond length is represented for both streching and bending mode of vibration. 
+#+attr_latex: :placement [H]
+#+caption:Nearest neighbor stretching and bending force constants versus bond length in bcc and fcc Cu-Pd system (Left three figures are in bcc lattice and three figures on the right are in fcc lattice). label:fig-main
+[[./images-si/main-fit.png]]
+
+Figure ref:fig-main shows stretching constants decrease monotonically with increasing bond length in both fcc and bcc lattice. Comparably, bending terms, by contrast, are relatively insensitive and magnitude is much lower than that of stretching term. In this case, only stretching constants are considered in our calculation of vibrational free energy. 
+
+* Effect of thermal expansion on phase diagram
+
+Thermal expansion is considered in calculation of vibration free energy. The vibration free energies of both CuPd fcc and B2 phases are calculated at 0%, 1% and 2% volume increase. Super-cell radius is chosen to be 35 $\AA$ and temperature interval is 10 K per step. As is shown in figure ref:fig-thermal, the thermal expansion has apparent influence on phase boundary at high temperature. large thermal expansion seems cause decreasing in order-disorder transition temperature and reduce the region of B2 phase. It indicates thermal expansion add up to the instability of B2 phase. This phenomenon can be explained by the changes of vibrational entropy due to the anharmonicity resulted from volume effect cite:van-2002-effec-lattic. On the other hand, as thermal expansion is considered, stiffness of all bonds decreases as volume expands which may cause instability of bcc lattice as the stiffness of longer bond approaching to zero. Although thermal expansion cause noticeable change to phase diagram, this change in B2 region is still insufficient to reproduce the experimental phase diagram. But it is also important to note that volume expansion set in out calculation may be different from that in real world and it may be too difficult to evaluate its true effect unless the experimental data of thermal expansion is obtained. 
+
+#+attr_latex: :placement [H]
+#+caption: Phase diagram between L12 and B2 phases with different volume increase. label:fig-thermal
+[[./images-si/thermalexpand.png]]
+
+* Effect of different functionals on ground state energy
+
+Different functionals may influence the energy of ground state structures. Calculations based on various functionals were performed on most of the known ground state structures. For bcc, the structures are: \ce{Cu}, \ce{Cu6Pd2}, \ce{Cu5Pd3}, \ce{CuPd}, \ce{Pd}. As for fcc, structures are: \ce{Cu}, \ce{Cu3Pd}, \ce{Cu5Pd3}, \ce{Cu4Pd4}, \ce{Cu3Pd5}, \ce{CuPd3} and \ce{Pd}. 
+
+#+caption: Left panel a shows the heat of formation of all ground state (gs) structures in different functionals. For each point, the x value is the heat of formation for each ground states using PBE functional. Each y value is the heat of formation for the same structure using PBEsol, AMO5 and LDA functionals. The blue line is the parity line comparing the results from various functionals. Middle panel shows the convex hull of fcc lattice utilizing various functionals. The right panel shows the convex hull of bcc lattice using various functionals. label:fig-var-func
+#+attr_latex: :placement [H] 
+[[./images-si/different-functional.png]]
+
+Figure ref:fig-var-func shows the influence of functional choice on heat of formation of the same ground state structures. All the calculations converge to 1 meV/atom with high energy cutoff and density of /k/-points grid. The middle panel shows that the heat of formation increases as the functional changes from PBE to LDA. The right panel shows similar trend which indicates the energy differences between the most stable structure of CuPd bcc and fcc will change through various functionals. In this case, construction of cluster expansion based on various functionals may have significant change to the order-disorder transition temperature and stability of CuPd bcc lattice.   
+
+* Effect of error in DFT calculation on phase diagram
+
+
+In order to evaluate whether energetic error of 1-2 meV/atom matters in phase boundary, we manually decrease energy of CuPd B2 ground state structure by 1-3 meV/atom. The resulting phase diagram is summarized in Figure ref:fig-b2. 
+#+attr_latex: :placement [H]
+#+caption: Effect of error in DFT calculation on transition temperature.   label:fig-b2  
+[[./images-si/changeb2.png]]
+
+As is shown in figure ref:fig-b2, the order-disorder transition temperature increases by 5-15 K since the CuPd B2 energy decreases by 1-3 meV/atom. Meanwhile, as energy of B2 phase is reduced, the B2 region remains its shape.
+
+Therefore, it is evident that error in DFT energy does not significantly change the region of B2 phase. 
+
+
+* References
+ 
+bibliographystyle:elsarticle-num
+bibliography:references.bib
+
+
+* Appendix
+** Example of k-points convergence in various functionals
+*** Cu fcc A1 PBE
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+kpt = [10,12,14,16,18,20]# set the k-points density from 10X10X10 to 20X20X20
+
+energy = []
+with jasp('../CuPd_fcc/0')as calc:#copy structure of Cu fcc from cluster exapansion of CuPd fcc
+ atoms0=calc.get_atoms()
+
+for a in kpt:
+   with jasp('../../../convergence/Cu-fcc-PBE-kpt{0}'.format(a)),
+           xc = 'PBE',
+           kpts = (a,a,a),
+           encut = 500,
+           ediff = 1e-5,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+         atoms0.get_forces()
+        try:
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+        except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(kpt,energy,'ro-')
+plt.xlabel('Number of k-points per reciprocal atom')
+plt.ylabel('Energy (eV/atom)')
+plt.title(' Convergence of k-points density for Cu fcc structure')
+plt.savefig('./images-si/kpt-Cu-fcc-PBE.png')
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+
+*** Cu fcc A1 PBEsol
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+kpt = [10,11,12,13,14,15,16,17,18,19,20,21,22,23]# set the number of k-points from 10X10X10 to 23X23X23
+
+energy = []
+with jasp('../../../CuPd_fcc/0')as calc:# Copy the structure of Cu fcc from cluster expansion of CuPd fcc
+     atoms0 = calc.get_atoms()
+for a in kpt:
+       with jasp('../../../convergence/Cufcc-PBESOL-kpt{0}'.format(a),
+           xc = 'LDA',
+           gga = 'PS',
+           kpts = (a,a,a),
+           encut = 500,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+        atoms0.get_forces()
+       
+       try:        
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(kpt,energy,'ro-')
+plt.xlabel('K-points')
+plt.ylabel('Energy (eV/atom)')
+plt.title('K-points convergence for Cufcc')
+plt.savefig('./images-si/kpt-converge-Cufcc-PBEsol.png')
+plt.show()
+
+#+END_SRC
+
+*** Cu fcc A1 LDA
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+kpt = [10,11,12,13,14,15,16,17]# set the k-points density from 10X10X10 to 17X17X17
+
+energy = []
+with jasp('../../../CuPd_fcc/0')as calc:# copy the structure of Cu from cluster expansion of CuPd fcc
+     atoms0 = calc.get_atoms()
+for a in kpt:
+       with jasp('../../../convergence/Cufcc-LDA-kpt{0}'.format(a),
+           xc = 'LDA',
+           kpts = (a,a,a),
+           encut = 500,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+        atoms0.get_forces()
+       
+       try:
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(kpt,energy,'ro-')
+plt.xlabel('K-points')
+plt.ylabel('Energy (eV/atom)')
+plt.title('K-points convergence for Cufcc')
+plt.savefig('./images-si/kpt-converge-Cufcc-LDA.png')
+
+plt.show()
+
+#+END_SRC
+
+*** Cu fcc A1 AMO5
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+kpt = [10,11,12,13,14,15,16,17,18,19,20,21,22]# set the k-points density from 10X10X10 to 22X22X22
+
+energy = []
+with jasp('../../../CuPd_fcc/0')as calc:# copy the structure of Cu fcc from cluster expansion of CuPd fcc
+     atoms0 = calc.get_atoms()
+for a in kpt:
+       with jasp('../../../convergence/Cufcc-AMO5-kpt{0}'.format(a),
+           xc = 'LDA',
+           gga = 'AM',
+           kpts = (a,a,a),
+           encut = 500,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+        atoms0.get_forces()
+       
+       try:
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(kpt,energy,'ro-')
+plt.xlabel('K-points')
+plt.ylabel('Energy (eV/atom)')
+plt.title('K-points convergence check for Cu fcc')
+plt.savefig('./images-si/kpt-converge-Cufcc-AMO5.png')
+plt.show()
+
+#+END_SRC
+
+** Examples of encut convergence in various functionals
+*** Cufcc A1 PBESOL 
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+Encut = [400,450,500,550,600]# sets of different energy cutoff
+
+energy = []
+
+with jasp('CuPd_fcc/0')as calc: # use the configuration 0 in cluster expansion of CuPd fcc as structure input
+     atoms0 = calc.get_atoms()
+
+for a in Encut:
+       with jasp('convergence/Cufcc-PBESOL-encut{0}'.format(a),
+           xc = 'LDA',
+           gga = 'PS',
+           kpts = (13,13,13),
+           encut = a,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+        atoms0.get_forces()
+       
+       try:
+            atoms = calc.get_atoms()
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(Encut,energy,'ro-')
+plt.xlabel('Encut (eV)')
+plt.ylabel('Energy (eV/atom)')
+plt.title('Encut convergence for Cu fcc')
+plt.savefig('./convergence/Encut converge-Cufcc-AMOF.png')
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+: [[./convergence/Encut converge-Cufcc-AMOF.png]]
+
+#+RESULTS:
+
+*** Cufcc A1 LDA
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+Encut = [300,350,400,450,500,550]# set all the energy cutoff number
+
+energy = []
+with jasp('CuPd_fcc/0')as calc:# copy the structure of Cu in Cluster expansion of CuPd fcc
+     atoms0 = calc.get_atoms()
+
+
+for a in Encut:
+       with jasp('convergence/Cufcc-LDA-encut{0}'.format(a),# the calculation result is stored in Cufcc-LDA-encutXX 
+           xc = 'LDA',
+           kpts = (13,13,13),
+           encut = a,
+           ediff = 1e-5,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+       atoms0.get_forces()
+       
+       try:
+            energy.append(atom.get_potential_energy()/len(atom))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(Encut,energy,'ro-')
+plt.xlabel('Encut (eV)')
+plt.ylabel('Energy (eV/atom)')
+plt.title('Encut convergence for Cufcc')
+plt.savefig('./convergence/Encut converge-Cufcc-AMOF.png')
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+: [[./convergence/Encut converge-Cufcc-AMOF.png]]
+
+#+RESULTS:
+
+*** Cufcc A1 AMO5
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+Encut = [350,400,450,500,550,600]# set the energy cutoff 
+
+energy = []
+with jasp('CuPd_fcc/0')as calc:# copy the structure of Cu in cluster expansion of CuPd fcc to atom0
+     atoms0 = calc.get_atoms()
+
+for a in Encut:
+       with jasp('convergence/Cufcc-AMO5-encut{0}'.format(a),# the result is stored in this directory
+           xc = 'LDA',
+           gga = 'AM',
+           kpts = (13,13,13),
+           encut = a,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+       atoms0.get_forces()
+       
+       try:
+
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(Encut,energy,'ro-')
+plt.xlabel('Encut')
+plt.ylabel('Energy (eV/atom)')
+plt.title('encut convergence check for Cufcc')
+plt.savefig('./convergence/Encut converge-Cufcc-AMOF.png')
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+: [[./convergence/Encut converge-Cufcc-AMOF.png]]
+
+#+RESULTS:
+
+*** Cufcc A1 PBE
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+
+
+
+Encut = [350,400,450,500,550,600]# set the energy cutoff 
+
+energy = []
+with jasp('CuPd_fcc/0')as calc:# copy the structure of Cu in cluster expansion of CuPd fcc to atom0
+     atoms0 = calc.get_atoms()
+
+for a in Encut:
+       with jasp('convergence/Cufcc-PBE-encut{0}'.format(a),# the result is stored in this directory
+           xc = 'PBE',
+           kpts = (13,13,13),
+           encut = a,
+           ediff = 1e-6,
+           isif = 7,
+           ibrion = 2,
+           nsw = 40,
+           atoms = atoms0) as calc:
+       atoms0.get_forces()
+       
+       try:
+
+            energy.append(atoms0.get_potential_energy()/len(atoms0))
+       except (VaspSubmitted, VaspQueued):
+            pass 
+
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(Encut,energy,'ro-')
+plt.xlabel('Encut')
+plt.ylabel('Energy (eV/atom)')
+plt.title('Encut convergence for Cufcc')
+plt.savefig('./convergence/Encut converge-Cufcc-PBE.png')
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+: [[./convergence/Encut converge-Cufcc-AMOF.png]]
+
+#+RESULTS:
+
+** Figure 1 result of cluster expansion
+#+BEGIN_SRC python
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+fig = plt.figure(figsize=(11,8))
+ax = fig.add_subplot(221)
+f = open('../../../CuPd_fcc_encut500_4000/gs.out','r')
+lines = f.readlines()
+f.close()
+
+gs_fcc_concentration,gs_fcc_energy,gs_fcc_fitenergy,gs_fcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 6:  #mmaps
+        c, e,fe,err,nu,i = line.split()
+    gs_fcc_concentration.append(float(c))
+    gs_fcc_energy.append(float(e))
+    gs_fcc_fitenergy.append(float(fe))
+    gs_fcc_index.append(int(i))
+
+
+
+
+
+f = open('../../../CuPd_fcc_encut500_4000/fit.out','r')
+lines = f.readlines()
+f.close()
+
+gs_c_fcc_concentration,gs_c_fcc_energy,gs_c_fcc_fitenergy,gs_c_fcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 6:  #mmaps
+        c, e,fe,err,nu,i = line.split()
+    gs_c_fcc_concentration.append(float(c))
+    gs_c_fcc_energy.append(float(e))
+    gs_c_fcc_fitenergy.append(float(fe))
+    gs_c_fcc_index.append(int(i))
+
+
+f = open('../../../CuPd_bcc_encut500_3000/gs.out','r')
+lines = f.readlines()
+f.close()
+
+gs_bcc_concentration,gs_bcc_energy,gs_bcc_fitenergy,gs_bcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 6:  #mmaps
+        c, e,fe,err,nu,i = line.split()
+    gs_bcc_concentration.append(float(c))
+    gs_bcc_energy.append(float(e))
+    gs_bcc_fitenergy.append(float(fe))
+    gs_bcc_index.append(int(i))
+
+
+
+f = open('../../../CuPd_bcc_encut500_3000/fit.out','r')
+lines = f.readlines()
+f.close()
+
+gs_c_bcc_concentration,gs_c_bcc_energy,gs_c_bcc_fitenergy,gs_c_bcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 6:  #mmaps
+        c, e,fe,err,nu,i = line.split()
+    gs_c_bcc_concentration.append(float(c))
+    gs_c_bcc_energy.append(float(e))
+    gs_c_bcc_fitenergy.append(float(fe))
+    gs_c_bcc_index.append(int(i))
+
+
+import matplotlib.pyplot as plt
+ax.plot([0,1],[0,0],'k--')
+ax.plot(gs_c_fcc_concentration,gs_c_fcc_fitenergy,'gx',label=" Fitted Energies")
+ax.plot(gs_fcc_concentration,gs_fcc_energy,'ko-',
+     label='Known Ground State',markersize=4,
+     markerfacecolor='blue',markeredgecolor='black')
+ax.plot(gs_fcc_concentration,gs_fcc_fitenergy,'g+')
+ax.plot(gs_c_fcc_concentration,gs_c_fcc_energy,'r+',label="known Structure")
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Heat Of Formation ($eV/atom$)')
+ax.text(0.05,0.03,'(a)',size=20)
+ax.legend(loc=4,prop={'size':10})
+ax.set_ylim([-0.15,0.05])
+ax = fig.add_subplot(222)
+ax.plot(gs_c_bcc_concentration,gs_c_bcc_fitenergy,'gx',label=" Fitted Energies")
+ax.plot(gs_bcc_concentration,gs_bcc_energy,'ko-',
+     label='Known Ground State',markersize=4,
+     markerfacecolor='blue',markeredgecolor='black')
+ax.plot(gs_bcc_concentration,gs_bcc_fitenergy,'g+')
+ax.plot(gs_c_bcc_concentration,gs_c_bcc_energy,'r+',label="known Structure")
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Heat Of Formation ($eV/atom$)')
+ax.text(0.05,0.03, '(b)', size=20)
+ax.set_ylim([-0.15,0.05])
+
+plt.tight_layout()
+ax.legend(loc=4,prop={'size':9})
+
+
+
+cluseci = []
+clusradii = []
+f = open('../../../CuPd_fcc_encut500_4000/clusinfo.out','r')
+for line in f:
+    if line.startswith('#'):
+        continue
+    try:
+        n,radius,df,eci = line.split()
+        clusradii.append((int(n)-2)*20 + float(radius))
+        cluseci.append(float(eci))
+    except ValueError:
+        continue
+
+f.close()
+
+ax = fig.add_subplot(223)
+ax.plot(clusradii,cluseci,'ko')
+#ax = gca()
+
+ax.set_xticks([0,5,10,15,
+               20,25,30,35,
+               40, 45, 50,55])
+
+ax.set_xticklabels(['pairs','5','10','15',
+                    'trip','5','10','15',
+                    'quad','5','10','15'])
+
+ax.set_xlabel('Cluster radius ($\AA$)')
+ax.set_ylabel('ECI ($eV$)')
+ax.set_ylim([-0.005,0.035])
+ax.text(2,0.030,'(c)',size=20)
+#ax.title('ECI vs. cluster radius')
+plt.tight_layout()
+
+
+cluseci = []
+clusradii = []
+f = open('../../../CuPd_bcc_encut500_3000/clusinfo.out','r')
+for line in f:
+    if line.startswith('#'):
+        continue
+    try:
+        n,radius,df,eci = line.split()
+        clusradii.append((int(n)-2)*20 + float(radius))
+        cluseci.append(float(eci))
+    except ValueError:
+        continue
+
+f.close()
+
+ax = fig.add_subplot(224)
+ax.plot(clusradii,cluseci,'ko')
+#ax = gca()
+
+ax.set_xticks([0,5,10,15,
+               20,25,30,35,
+               40, 45, 50,55])
+
+ax.set_xticklabels(['pairs','5','10','15',
+                    'trip','5','10','15',
+                    'quad','5','10','15'])
+
+ax.set_xlabel('Cluster radius ($\AA$)')
+ax.set_ylabel('ECI ($eV$)')
+ax.set_ylim([-0.005,0.035])
+ax.text(2,0.030,'(d)',size=20)
+#ax.title('ECI vs. cluster radius')
+plt.tight_layout()
+
+str = './images-si/fcc-bcc-convexhull'
+for ext in ['.png', '.eps']:
+    plt.savefig(str + ext, dpi=300)
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+
+** Convergence of encut for force constant
+*** Cu-Cu bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut425/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (encut 425)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (encut 425)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut500/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'yd',label='dr = 0.02 $\AA$ (encut 500)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'yd',label='dr = 0.02 $\AA$ (encut 500)')
+
+
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (encut 350)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (encut 350)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/Cu-Cu-testencut' + ext, dpi=300)
+#plt.savefig('Cu-Cu-testencut.png')
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+*** Cu-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut425/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (encut 425)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (encut 425)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut500/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (encut 500)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (encut 500)')
+
+
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (encut 350)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (encut 350)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/Cu-Pd-testencut' + ext, dpi=300)
+plt.show()
+#+END_SRC
+
+
+#+RESULTS:
+*** Pd-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut425/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (encut 425)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (encut 425)')
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_encut500/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'yd',label='dr = 0.02 $\AA$ (encut 500)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'yd',label='dr = 0.02 $\AA$ (encut 500)')
+
+
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (encut 350)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (encut 350)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png', '.eps']:
+  plt.savefig('./images-si/Pd-Pd-testencut'+ext, dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** Convergence of er for force constant
+*** Cu-Cu bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+from matplotlib.ticker import MaxNLocator
+fig=plt.figure(figsize=(10,5))
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035_dr7/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'d',label='er=7 $\AA$')  
+ax = fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'d',label='er=7 $\AA$')
+
+
+
+
+
+
+# take Cu-Cu
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'ko',label='er = 8.4 $\AA$')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA}^2$)')
+plt.legend(loc='best',prop={'size':9})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'ko',label='er = 8.4 $\AA$')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA}^2$)')
+plt.legend(loc='best',prop={'size':9})
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/Cu-Cu-tester' + ext, dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+*** Cu-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+from matplotlib.ticker import MaxNLocator
+fig=plt.figure(figsize=(10,5))
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035_dr7/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'d',label='er=7 $\AA$')  
+ax = fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'d',label='er=7 $\AA$')
+
+
+
+
+
+
+# take Cu-Cu
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'ko',label='er = 8.4 $\AA$')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':9})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'ko',label='er = 8.4 $\AA$')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':9})
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/Cu-Pd-tester' + ext, dpi=300)
+#plt.savefig('Cu-Cu-testencut.png')
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+*** Pd-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+from matplotlib.ticker import MaxNLocator
+fig=plt.figure(figsize=(10,5))
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035_dr7/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'d',label='er=7 $\AA$')  
+ax = fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'d',label='er=7 $\AA$')
+
+
+# take Cu-Cu
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'ko',label='er = 8.4 $\AA$')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':9})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(1,2,2)
+ax.plot(bondL0,bend,'ko',label='er = 8.4 $\AA$')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':9})
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/Pd-Pd-tester' + ext, dpi=300)
+#plt.savefig('Cu-Cu-testencut.png')
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** Convergence of k-points for force constant
+*** Cu-Cu bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt11/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')
+
+
+
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt8/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8')
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond $eV/{\AA^2}$')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Cu-Cu-testkpts'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+*** Cu-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt11/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')
+
+
+
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt8/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8)')
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Cu-Pd-testkpts'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+#+RESULTS:
+*** Pd-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt11/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 10x10x10)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (kpoints 9x9x9)')
+
+
+
+filename = '../../../CuPd_bcc_encut500_dr0.02kpt/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 7x7x7)')
+
+
+filename = '../../../CuPd_bcc_dr0.02_kpt8/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'o',label='dr = 0.02 $\AA$ (kpoints 8x8x8)')
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_dr0.02/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')  
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$) ')
+plt.legend(loc='best',prop={'size':8})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (kpoints 5x5x5)')
+plt.xlabel('Bond length ($\AA$)')
+plt.ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+plt.legend(loc='best',prop={'size':8})
+plt.tight_layout()
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Pd-Pd-testkpts'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** Convergence of displacement of atom for force constant
+*** bcc
+**** Cu-Cu bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.005 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.005/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'x',label='dr = 0.005 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'x',label='dr = 0.005 $\AA$')
+
+# displacement of atom = 0.04 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.04/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.04 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.04 $\AA$')
+
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$')
+
+# displacement of atom = 0.03 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.03/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax= fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.03 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.03 $\AA$')
+
+
+# take Cu-Cu
+filename = '../../../CuPd_bcc_encut500_is1_dr0.01/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'yo',label='dr = 0.01 $\AA$ ')  
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.01 $\AA$')
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond $eV/{\AA^2}$')
+ax.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for exp in ['.png','.eps']:
+ plt.savefig('./images-si/Cu-Cu-testradius'+exp,dpi=300)
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+**** Cu-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.005 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.005/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'x',label='dr = 0.005 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'x',label='dr = 0.005 $\AA$')
+
+# displacement of atom is 0.04 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.04/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.04 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.04 $\AA$')
+
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$')
+
+# displacement of atom = 0.03 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.03/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax= fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.03 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.03 $\AA$')
+
+
+# displacement of atom = 0.01 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.01/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'yo',label='dr = 0.01 $\AA$ ')  
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.01 $\AA$')
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond $eV/{\AA^2}$')
+ax.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png','.eps']:
+  plt.savefig('./images-si/Cu-Pd-testradius'+ext,dpi=300)
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+#+RESULTS:
+**** Pd-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.005 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.005/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'x',label='dr = 0.005 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'x',label='dr = 0.005 $\AA$')
+
+# displacement of atom is 0.04 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.04/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.04 $\AA$')  
+ax = fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.04 $\AA$')
+
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$')
+
+# displacement of atom = 0.03 Ang
+filename = '../../../CuPd_bcc_encut500_dr0.03/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax= fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.03 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.03 $\AA$')
+
+
+# displacement of atom = 0.01 Ang
+filename = '../../../CuPd_bcc_encut500_is1_dr0.01/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'yo',label='dr = 0.01 $\AA$ ')  
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.01 $\AA$')
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond $eV/{\AA^2}$')
+ax.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Pd-Pd-testradius'+ext,dpi=300)
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+*** fcc
+**** Cu-Cu bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.05 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.05/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.05 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.05 $\AA$')
+
+# displacement of atom is 0.2 Ang
+filename = '../../../CuPd_fcc_encut500_vib2_hp/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.2 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.2 $\AA$')
+
+# displacement of atom = 0.035 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.035 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.035 $\AA$')
+
+
+# displacement of atom is 0.02 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.02/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'yo',label='dr = 0.02 $\AA$ ')  
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.text(2.56,1.86,'(a)',color='black',fontsize='19')
+
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.02 $\AA$')
+ax.set_xlabel('Bond length ($\AA$)')
+ax.set_ylabel('Stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc=4,prop={'size':10})
+ax.text(2.56,-0.004,'(b)',color='black',fontsize='19')
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Cu-Cu-fcctestradius'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+**** Cu-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.05 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.05/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.05 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.05 $\AA$')
+
+# displacement of atom = 0.2 Ang
+filename = '../../../CuPd_fcc_encut500_vib2_hp/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.2 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.2 $\AA$')
+
+# displacement of atom = 0.035 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.035 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.035 $\AA$')
+
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.02/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'yo',label='dr = 0.02 $\AA$ ')  
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.text(2.64,2.5,'(a)',color='black',fontsize='19')
+
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.02 $\AA$')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc=4,prop={'size':10})
+ax.text(2.64,-0.018,'(b)',color='black',fontsize='19')
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Cu-Pd-fcctestradius'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+**** Pd-Pd bond
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+
+# displacement of atom = 0.05 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.05/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax = fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.05 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.05 $\AA$')
+
+# displacement of atom = 0.2 Ang
+filename = '../../../CuPd_fcc_encut500_vib2_hp/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'d',label='dr = 0.2 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'d',label='dr = 0.2 $\AA$')
+
+# displacement of atom = 0.035 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(121)
+ax.plot(bondL0,strech,'o',label='dr = 0.035 $\AA$')  
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'o',label='dr = 0.035 $\AA$')
+
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_fcc_encut500_is1_dr0.02/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+ax=fig.add_subplot(1,2,1)
+ax.plot(bondL0,strech,'yo',label='dr = 0.02 $\AA$ ')  
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.text(2.74,3.1,'(a)',color='black',fontsize='19')
+
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+
+ax=fig.add_subplot(122)
+ax.plot(bondL0,bend,'yo',label='dr = 0.02 $\AA$')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc=4,prop={'size':10})
+ax.text(2.74,-0.07,'(b)',color='black',fontsize='19')
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+for ext in ['.png','.eps']:
+ plt.savefig('./images-si/Pd-Pd-fcctestradius'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** SI plot stiffness vs bond length together
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure(figsize=(12,10))
+
+ax = fig.add_subplot(321)
+def function(x):# fitted result from fitsvsl
+
+  return -0.13061*x**6+3.44714*x**4-30.41924*x**2+89.85356
+
+
+bondL0 = []
+strech = []
+bend=[]
+
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,7)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+
+ax.plot(bondL0,strech,'x',label='bcc stretching ')
+ax.plot(bondL0,bend,'r*',label='bcc bending')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[0 for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.text(2.8,2,'Cu-Cu',fontsize=17)
+ax.set_title('BCC')
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+
+
+
+
+ax = fig.add_subplot(322)
+
+def function(x):
+
+  return -8.618*x+23.898 # fitted result from fitsvsl 
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+ax.plot(bondL0,strech,'yo',label='fcc stretching ') 
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+
+ax.set_title('FCC')
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[0 for i in x],'b-')
+ax.plot(bondL0,bend,'r*',label='fcc bending')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':10})
+ax.text(2.61,1.7,'Cu-Cu',fontsize=17)
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+
+
+
+### Cu-Pd bond
+
+ax = fig.add_subplot(323)
+def function(x):
+
+  return -0.14861*x**6+4.14352*x**4-38.59792*x**2+120.31631 # fitted result from fitsvsl
+
+
+bondL0=[]
+strech = []
+bend = []
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,6)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+#plt.subplot(1,3,2)
+ax.plot(bondL0,strech,'x',label='bcc stretching ')
+ax.plot(bondL0,bend,'r*',label='bcc bending')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[-0.00739*i**6+0.16496*i**4-6.54186*i+11.65808 for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.text(2.8,3,'Cu-Pd',fontsize=17)
+ax.legend(loc=1,prop={'size':10})
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+
+ax = fig.add_subplot(324)
+def function(x):
+
+  return -8.975*x+26.043 # fitted result from fitsvsl 
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+ax.plot(bondL0,strech,'yo',label='fcc streching ') 
+x = np.linspace(min(bondL0),max(bondL0))
+ax.plot(bondL0,bend,'r*',label='fcc bending')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[-0.04554 for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.text(2.7,2,'Cu-Pd',fontsize=17)
+ax.legend(loc=1,prop={'size':10})
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+
+
+
+ax=fig.add_subplot(325)
+def function(x):
+
+  return -0.22303*x**6+6.21903*x**4-58.27893*x**2+184.13498 # fitted result from fitsvsl
+
+
+bondL0 = []
+strech = []
+bend = []
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,6)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+
+#ax = fig.add_subplot(1,3,3)
+ax.plot(bondL0,strech,'x',label='bcc stretching ')  
+ax.plot(bondL0,bend,'r*',label='bcc bending')
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[0.0335*i**6-0.88482*i**4+7.79392*i**2-22.97742 for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$) ')
+ax.legend(loc=1,prop={'size':10})
+ax.text(2.9,3.5,'Pd-Pd',fontsize=17)
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+ax=fig.add_subplot(326)
+
+def function(x):
+  return -13.876*x+40.95
+#  return -2.7236*x**2+23.45347
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+x = np.linspace(min(bondL0),max(bondL0))
+ax.plot(bondL0,strech,'yo',label='fcc streching ') 
+ax.plot(bondL0,bend,'r*',label='bcc bending')
+ax.plot(x,[function(i) for i in x],'b-')
+ax.plot(x,[0.29828*i**2-2.42971 for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$) ')
+ax.legend(loc=1,prop={'size':10})
+ax.text(2.775,2.5,'Pd-Pd',fontsize=17)
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/main-fit' + ext, dpi=300)
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** Figure. 3 plot stiffness of stretching mode vs bond length
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+fig = plt.figure()
+
+ax = fig.add_subplot(131)
+def function(x):
+
+  return -0.13061*x**6+3.44714*x**4-30.41924*x**2+89.85356
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+ax.plot(bondL0,strech,'yo',label='fcc stretching ') 
+
+bondL0 = []
+strech = []
+bend=[]
+
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,7)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+
+ax.plot(bondL0,strech,'x',label='bcc stretching ')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc='best',prop={'size':7})
+ax.text(2.8,2.2,'Cu-Cu',fontsize=15)
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+### Cu-Pd bond
+
+def function(x):
+
+  return -0.14861*x**6+4.14352*x**4-38.59792*x**2+120.31631
+
+ax=fig.add_subplot(1,3,2)
+
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+ax.plot(bondL0,strech,'yo',label='fcc stretching ') 
+bondL0=[]
+strech = []
+bend = []
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,6)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+#plt.subplot(1,3,2)
+ax.plot(bondL0,strech,'x',label='bcc stretching ')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.text(2.9,3,'Cu-Pd',fontsize=15)
+ax.legend(loc=1,prop={'size':7})
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+
+### Pd-Pd bond
+ax=fig.add_subplot(133)
+def function(x):
+
+  return -0.22303*x**6+6.21903*x**4-58.27893*x**2+184.13498
+
+filename = '../../../CuPd_fcc_encut500_is1_dr0.035/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+plt.plot(bondL0,strech,'yo',label='fcc stretching ') 
+bondL0 = []
+strech = []
+bend = []
+filename = '../../../CuPd_bcc_encut500_is1_dr0.02/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+
+coefs = np.polyfit(bondL0,strech,6)
+
+x = np.linspace(min(bondL0),max(bondL0))
+fit = np.polyval(coefs[::],x)
+
+ax.plot(bondL0,strech,'x',label='bcc stretching ')  
+ax.plot(x,[function(i) for i in x],'b-')
+ax.set_xlabel('bond length ($\AA$)')
+ax.set_ylabel('stiffness of bond ($eV/{\AA^2}$)')
+ax.legend(loc=1,prop={'size':7})
+ax.text(2.9,3.5,'Pd-Pd',fontsize=15)
+plt.tight_layout()
+
+ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/combine-fit' + ext, dpi=300)
+
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** Figure. 5 plot effect of vibrational free energy
+
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+
+plt.subplot(121)
+# get reference energy
+filename = '../../../CuPd_fcc_encut500_4000/ref_energy.in'
+with open(filename) as f:
+  lines = f.readlines()
+E_ref = []
+for line in lines:
+  E_ref += [np.array(line[0:].split(), dtype=float)[0]]
+  
+Cu_ref = E_ref[0]
+Pd_ref = E_ref[1]
+
+
+# CuPd_bcc
+n = ['0','614','479','3','1']
+energy = []
+
+for a in n:
+     with jasp('../../../CuPd_bcc_encut500_3000/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            energy.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+# obtain vibrational free energy
+def Gfree_bcc(n):
+  filename = '../../../final-data/vib-nobend-kpt4000/bcc-{}-fvib'.format(n)
+  with open(filename) as f:  
+    lines = f.readlines()
+  G = []
+  for i,line in enumerate(lines):
+   if i==0 or i==300 or i ==600 or i==900:
+     G += [np.array(line[0:].split(), dtype=float)[0]]
+  return G
+def Gfree_ref(n):
+  filename = '../../../final-data/vib-nobend-kpt4000/fcc-{}-fvib'.format(n)
+  with open(filename) as f:  
+    lines = f.readlines()
+  G = []
+  for i,line in enumerate(lines):
+   if i==0 or i==300 or i == 600 or i==900:
+     G += [np.array(line[0:].split(), dtype=float)[0]]
+  return G
+
+ref_Cu = Gfree_ref(0)
+ref_Pd = Gfree_ref(1)
+
+n = [0,614,479,3,1]
+composition = [0,0.25,0.375,0.5,1]
+natom = [1,8,8,2,1]
+G_bcc = []
+for i in n:
+  G_bcc.append(Gfree_bcc(i))
+# when T = 0K
+G_vib_0 = [G_bcc[i][0] for i in range(len(n))]
+for i in range(len(G_vib_0)):
+  G_vib_0[i]=(G_vib_0[i]-(1-composition[i])*ref_Cu[0]-(composition[i])*ref_Pd[0])
+energy_0 = np.array(energy)+np.array(G_vib_0)
+
+# when T = 300K
+G_vib_300 = [G_bcc[i][1] for i in range(len(n))]
+for i in range(len(G_vib_300)):
+  G_vib_300[i]=(G_vib_300[i]-(1-composition[i])*ref_Cu[1]-(composition[i])*ref_Pd[1])
+energy_300 = np.array(energy)+np.array(G_vib_300)
+
+# when T = 600K
+G_vib_600 = [G_bcc[i][2] for i in range(len(n))]
+for i in range(len(G_vib_600)):
+ G_vib_600[i]=(G_vib_600[i]-(1-composition[i])*ref_Cu[2]-(composition[i])*ref_Pd[2])
+energy_600 = np.array(energy)+np.array(G_vib_600)
+
+# when T = 900K
+G_vib_900 = [G_bcc[i][3] for i in range(len(n))]
+for i in range(len(G_vib_900)):
+  G_vib_900[i]=(G_vib_900[i]-(1-composition[i])*ref_Cu[3]-(composition[i])*ref_Pd[3])
+energy_900 = np.array(energy)+np.array(G_vib_900)
+
+import matplotlib.pyplot as plt
+compo = [0,0.25,0.375,0.5,0.75,1]
+compo2 = [0,0.25,0.375,0.5,1]
+
+plt.plot(compo2,energy,'x-',label='B2 without vibrational contribution (0K)')
+plt.plot(compo2, energy_0,'x-',label='B2 with vibrational contribution (0K)')
+
+plt.plot(compo2, energy_300,'x-',label='B2 with vibrational contribution (300K)')
+
+plt.plot(compo2, energy_600,'x-',label='B2 with vibrational contribution (600K)')
+
+plt.plot(compo2, energy_900,'x-',label='B2 with vibrational contribution (900K)')
+
+
+
+plt.legend()
+plt.xlabel('Pd composition')
+plt.ylabel('Heat of formation (eV/atom)')
+
+# draw fcc part
+# get reference energy
+filename = '../../../CuPd_fcc_encut500_4000/ref_energy.in'
+with open(filename) as f:
+  lines = f.readlines()
+E_ref = []
+for line in lines:
+  E_ref += [np.array(line[0:].split(), dtype=float)[0]]
+  
+Cu_ref = E_ref[0]
+Pd_ref = E_ref[1]
+
+# higher accuracy CuPd_fcc
+n = ['0','27','455','457','28','1']
+energy = []
+
+for a in n:
+     with jasp('../../../CuPd_fcc_encut500_4000/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            energy.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+
+# obtain vibrational free energy
+def Gfree_fcc(n):
+  filename = '../../../final-data/vib-nobend-kpt4000/fcc-{}-fvib'.format(n)
+  with open(filename) as f:  
+    lines = f.readlines()
+  G = []
+  for i,line in enumerate(lines):
+   if i==0 or i==300 or i == 600 or i==900:
+     G += [np.array(line[0:].split(), dtype=float)[0]]
+  return G
+
+
+ref_Cu = Gfree_fcc(0)
+ref_Pd = Gfree_fcc(1)
+
+n = [0,27,455,457,28,1]
+composition = [0,0.25,0.375,0.5,0.75,1]
+natom = [1,4,8,8,4,1]
+G_fcc = []
+for i in n:
+  G_fcc.append(Gfree_fcc(i))
+# when T = 0K
+G_vib_0 = [G_fcc[i][0] for i in range(len(n))]
+for i in range(len(G_vib_0)):
+  G_vib_0[i]=(G_vib_0[i]-(1-composition[i])*ref_Cu[0]-(composition[i])*ref_Pd[0])
+energy_0 = np.array(energy)+np.array(G_vib_0)
+
+# when T = 300K
+G_vib_300 = [G_fcc[i][1] for i in range(len(n))]
+for i in range(len(G_vib_300)):
+  G_vib_300[i]=(G_vib_300[i]-(1-composition[i])*ref_Cu[1]-(composition[i])*ref_Pd[1])
+energy_300 = np.array(energy)+np.array(G_vib_300)
+
+# when T = 600K
+G_vib_600 = [G_fcc[i][2] for i in range(len(n))]
+for i in range(len(G_vib_600)):
+ G_vib_600[i]=(G_vib_600[i]-(1-composition[i])*ref_Cu[2]-(composition[i])*ref_Pd[2])
+energy_600 = np.array(energy)+np.array(G_vib_600)
+
+# when T = 900K
+G_vib_900 = [G_fcc[i][3] for i in range(len(n))]
+for i in range(len(G_vib_900)):
+  G_vib_900[i]=(G_vib_900[i]-(1-composition[i])*ref_Cu[3]-(composition[i])*ref_Pd[3])
+energy_900 = np.array(energy)+np.array(G_vib_900)
+
+import matplotlib.pyplot as plt
+compo = [0,0.25,0.375,0.5,0.75,1]
+compo2 = [0,0.25,0.375,0.5,1]
+
+
+plt.plot(compo, energy,'o-',label='fcc without F_{vib} (0K)')
+
+plt.plot(compo, energy_0,'o-',label='fcc with F_{vib} (0K)')
+
+plt.plot(compo, energy_300,'o-',label='fcc with F_{vib} (300K)')
+
+plt.plot(compo, energy_600,'o-',label='fcc with F_{vib} (600K)')
+
+plt.plot(compo, energy_900,'o-',label='fcc with F_{vib} (900K)')
+
+
+plt.legend(loc='best',prop={'size':10})
+plt.xlabel('Pd composition')
+plt.ylabel('Heat of formation (eV/atom)')
+
+
+plt.subplot(1,2,2)
+def Gfree_bcc(n):
+  filename = '../../../final-data/vib-nobend-kpt4000/bcc-{}-fvib'.format(n)
+  with open(filename) as f:  
+    lines = f.readlines()
+  G = []
+  for i,line in enumerate(lines):
+     G += [np.array(line[0:].split(), dtype=float)[0]]
+  return G
+def Gfree_ref(n):
+  filename = '../../../final-data/vib-nobend-kpt4000/fcc-{}-fvib'.format(n)
+  with open(filename) as f:  
+    lines = f.readlines()
+  G = []
+  for i,line in enumerate(lines):
+     G += [np.array(line[0:].split(), dtype=float)[0]]
+  return G
+
+ref_Cu = np.array(Gfree_ref(0))
+ref_Pd = np.array(Gfree_ref(1))
+
+
+composition = [0,0.25,0.375,0.5,1]
+G_bcc = np.array(Gfree_bcc(3))
+
+G_l12 = np.array(Gfree_ref(27))
+G_614 = np.array(Gfree_bcc(614))
+G_fcc05 = np.array(Gfree_ref(457))
+G_bcc = G_bcc 
+G_l12 = G_l12 
+G_fcc05 = G_fcc05 
+G_614 = G_614 
+import matplotlib.pyplot as plt
+T = np.linspace(0,1000,1001)
+
+plt.plot(T,G_bcc,'b-')
+plt.plot(T,G_fcc05,'g-')
+plt.plot(T,G_l12,'r-')
+plt.plot(T,G_614,'y-')
+plt.legend(['B2 lattice (50 at% Pd)','fcc lattice (50 at% Pd)','fcc lattice (25 at% Pd)','B2 lattice (25 at% Pd)'],loc=3,prop={'size':9})
+plt.xlabel('Temperature (K)')
+plt.ylabel('Normalized vibrational free energy (eV/atom)')
+plt.tight_layout()
+for ext in ['.png', '.eps']:
+    plt.savefig('./images-si/subplot' + ext, dpi=300)
+
+
+plt.show()
+
+
+#+END_SRC
+
+#+RESULTS:
+
+** SI plot different functionals
+#+BEGIN_SRC python
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+f=plt.figure(figsize=(12,8))
+
+# get reference energy
+with jasp('../../../convergence/Cu-fcc-PBE-kppra8000') as calc:
+      atom = calc.get_atoms()
+      Cu_ref = atom.get_potential_energy()
+with jasp('../../../convergence/Pd-fcc-PBE-kppra10000') as calc:
+      atom = calc.get_atoms()
+      Pd_ref = atom.get_potential_energy()
+
+
+
+# higher accuracy CuPd_fcc
+n = ['Cu-fcc-PBE-kppra8000','Cu3Pd-fcc-PBE-kppra10000','CuPd455-fcc-PBE-kppra10000','CuPd457-fcc-PBE-kppra10000','CuPd505-fcc-PBE-kppra8000','CuPd3-fcc-PBE-kppra10000','Pd-fcc-PBE-kppra10000']
+PBE_fcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+
+            PBE_fcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+# CuPd_bcc
+n = ['Cu-bcc-PBE-kppra8000','CuPd614-bcc-PBE-kppra8000','CuPd494-bcc-PBE-kppra8000','CuPd-bcc-PBE-kppra8000','Pd-bcc-PBE-kppra8000']
+PBE_bcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+
+            PBE_bcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+# get reference energy
+with jasp('../../../convergence/Cufcc-PBESOL-kpt23') as calc:
+      atom = calc.get_atoms()
+      Cu_ref = atom.get_potential_energy()
+with jasp('../../../convergence/Pdfcc-PBESOL-kpt24') as calc:
+      atom = calc.get_atoms()
+      Pd_ref = atom.get_potential_energy()
+
+
+
+# higher accuracy CuPd_fcc
+n = ['Cufcc-PBESOL-kpt23','Cu3Pdfcc-PBESOL-kpt17','Cu5Pd3fcc-isif3-PBESOL-kpt17','Cu4Pd4A1fcc-PBESOL-kpt16','Cu3Pd5A1fcc-PBESOL-kpt14','CuPd3L12fcc-PBESOL-kpt19','Pdfcc-PBESOL-kpt24']
+PBEsol_fcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            PBEsol_fcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+# CuPd_bcc
+n = ['Cubcc-PBEsol-kpt22','CuPdbcc-614-PBEsol-kpt17','CuPdbcc-494-PBEsol-kpt14','CuPdbcc-3-PBEsol-kpt13','Pdbcc-PBEsol-kpt23']
+PBEsol_bcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+
+            PBEsol_bcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+
+# get reference energy
+with jasp('../../../convergence/Cufcc-AMO5-kpt22') as calc:
+      atom = calc.get_atoms()
+      Cu_ref = atom.get_potential_energy()
+with jasp('../../../convergence/Pdfcc-AMO5-kpt24') as calc:
+      atom = calc.get_atoms()
+      Pd_ref = atom.get_potential_energy()
+
+
+
+n = ['Cufcc-AMO5-kpt22','Cu3Pdfcc-AMO5-kpt20','Cu5Pd3fcc-isif3-AMO5-kpt15','Cu4Pd4A1fcc-AMO5-kpt14','Cu3Pd5A1fcc-AMO5-kpt14','CuPd3L12fcc-AMO5-kpt18','Pdfcc-AMO5-kpt24']
+AMO5_fcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            AMO5_fcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+n = ['Cubcc-AMO5-kpt19','CuPdbcc-614-AMO5-kpt16','CuPdbcc-494-AMO5-kpt14','CuPdbcc-3-AMO5-kpt13','Pdbcc-AMO5-kpt23']
+AMO5_bcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            AMO5_bcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+# get reference energy
+with jasp('../../../convergence/Cufcc-LDA-kpt17') as calc:
+      atom = calc.get_atoms()
+      Cu_ref = atom.get_potential_energy()
+with jasp('../../../convergence/Pdfcc-LDA-kpt24') as calc:
+      atom = calc.get_atoms()
+      Pd_ref = atom.get_potential_energy()
+
+
+
+n = ['Cufcc-LDA-kpt17','Cu3Pdfcc-LDA-kpt17','Cu5Pd3fcc-LDA-kpt13','Cu4Pd4A1fcc-LDA-kpt15','Cu3Pd5A1fcc-LDA-kpt15','CuPd3L12fcc-LDA-kpt19','Pdfcc-LDA-kpt24']
+LDA_fcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            LDA_fcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+n = ['Cubcc-LDA-kpt24','CuPd614bcc-LDA-kpt16','CuPd494bcc-LDA-kpt19','CuPdbcc-LDA-kpt13','Pdbcc-LDA-kpt23']
+LDA_bcc = []
+
+for a in n:
+     with jasp('../../../convergence/{0}'.format(a)) as calc:
+      atom = calc.get_atoms()
+     n = len(atom)
+     composition = 1.0
+     ele =  atom.get_chemical_symbols()
+   
+
+     for e in ele:
+       if e == 'Cu':
+        composition = composition - 1.0/n 
+     try:
+       #     print atoms0.get_forces()
+            LDA_bcc.append((atom.get_potential_energy() -Cu_ref*len(atom)*(1-composition)-Pd_ref*composition*len(atom))/len(atom))
+     except (VaspSubmitted, VaspQueued):
+            print '{0} not finished!'.format(a) 
+
+
+
+
+
+import matplotlib.pyplot as plt
+ax = f.add_subplot(131)
+ax.plot(PBE_fcc, PBEsol_fcc,'md',label='gs of fcc (PBEsol)')
+
+ax.plot(PBE_bcc, PBEsol_bcc,'mx',label='gs of bcc (PBEsol)')
+ax.plot(PBE_bcc, AMO5_bcc,'gx',label= 'gs of bcc (AMO5)')
+ax.plot(PBE_fcc,AMO5_fcc,'go',label='gs of fcc (AMO5)')
+ax.plot(PBE_fcc,LDA_fcc,'ro',label='gs of fcc (LDA)')
+ax.plot(PBE_bcc,LDA_bcc,'rx',label='gs of bcc (LDA)')
+
+
+ax.plot(np.linspace(0.07,-0.13),np.linspace(0.07,-0.13),'b-',label='PBE')
+ax.set_xlim([-0.13,0.07])
+ax.set_ylim([-0.13,0.07])
+plt.legend(loc='best',prop={'size':8})
+
+ax.set_xlabel('Heat of formation (PBE) ($eV/atom$)',fontsize=12)
+ax.set_ylabel('Heat of formation ($eV/atom$)',fontsize=12)
+
+plt.tight_layout()
+ax=f.add_subplot(132)
+composition_fcc = [0,0.25,0.375,0.5,0.625,0.75,1]
+composition_bcc = [0,0.25,0.375,0.5,1]
+ax.plot(composition_fcc, PBE_fcc,'ro-',label='PBE fcc')
+ax.plot(composition_fcc,LDA_fcc,'bo-',label='LDA fcc')
+ax.plot(composition_fcc,PBEsol_fcc,'go-',label='PBEsol fcc')
+ax.plot(composition_fcc,AMO5_fcc,'yo-',label='AMO5 fcc')
+ax.set_xlabel('Composition of Pd (at%)')
+ax.set_ylabel('Heat of formation ($eV/atom$)')
+ax.set_ylim([-0.125,0.05])
+plt.tight_layout()
+plt.legend(loc='best',prop={'size':10})
+ax=f.add_subplot(133)
+ax.plot(composition_bcc,PBE_bcc,'ro-',label='PBE bcc')
+ax.plot(composition_bcc,LDA_bcc,'bo-',label='LDA bcc')
+ax.plot(composition_bcc,PBEsol_bcc,'go-',label='PBEsol bcc')
+ax.plot(composition_bcc,AMO5_bcc,'yo-',label='AMO5 bcc')
+ax.set_xlabel('Composition of Pd (at%)')
+ax.set_ylabel('Heat of formation ($eV/atom$)')
+ax.set_ylim([-0.125,0.05])
+plt.tight_layout()
+plt.legend(loc='best',prop={'size':10})
+
+for ext in ['.png','.eps']:
+  plt.savefig('./images-si/different-functional'+ext,dpi=300)
+plt.show()
+
+#+END_SRC
+
+** SI use more accurate force calculation based on Ismear=1
+*** Cu-Cu bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (ismear=-5)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (ismear=-5)')
+
+
+
+
+
+# displacement of atom is 0.02 Ang
+filename = '../../../CuPd_bcc_dr0.02_ismear1/f_Cu-Cu.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (ismear=1)')  
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (ismear=1)')
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+
+
+for ext in ['.png','.eps']:
+  plt.savefig('./images-si/Cu-Cu-ismear'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+
+
+#+RESULTS:
+*** Cu-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (ismear=-5)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (ismear=-5)')
+
+
+
+
+
+# displacement of atom is 0.02 Ang
+filename = '../../../CuPd_bcc_dr0.02_ismear1/f_Cu-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (ismear=1)')  
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (ismear=1)')
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+
+
+for ext in ['.png','.eps']:
+  plt.savefig('./images-si/Cu-Pd-ismear'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+
+
+#+RESULTS:
+*** Pd-Pd bond
+#+BEGIN_SRC python
+
+from ase import Atom, Atoms
+import numpy as np
+from jasp import *
+from ase.visualize import view
+from ase.lattice import bulk
+import os
+import matplotlib.pyplot as plt
+
+# displacement of atom = 0.02 Ang
+filename = '../../../CuPd_bcc_dr0.02_kpt10/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'d',label='dr = 0.02 $\AA$ (ismear=-5)')  
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'d',label='dr = 0.02 $\AA$ (ismear=-5)')
+
+
+
+
+filename = '../../../CuPd_bcc_dr0.02_ismear1/f_Pd-Pd.dat'
+with open(filename) as f:
+    lines = f.readlines()
+bondL0 = []
+strech = []
+bend = [] 
+for i,line in enumerate(lines):
+     bondL0 += [np.array(line[0:].split(), dtype=float)[0]]
+     strech += [np.array(line[0:].split(), dtype=float)[1]]
+     bend += [np.array(line[0:].split(), dtype=float)[2]]
+plt.subplot(1,2,1)
+plt.plot(bondL0,strech,'ko',label='dr = 0.02 $\AA$ (ismear=1)')  
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.subplot(1,2,2)
+plt.plot(bondL0,bend,'ko',label='dr = 0.02 $\AA$ (ismear=1)')
+plt.xlabel('bond length ($\AA$)')
+plt.ylabel('stiffness of bond ($eV/\AA^2$)')
+plt.legend(loc='best',prop={'size':10})
+plt.tight_layout()
+
+
+
+for ext in ['.png','.eps']:
+  plt.savefig('./images-si/Pd-Pd-ismear'+ext,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+
+** SI Compare convex hull of fcc to bcc
+
+
+#+BEGIN_SRC python
+
+from ase.io import read
+import os
+f = open('../../../CuPd_bcc_encut500_3000/gs.out','r')
+lines = f.readlines()
+f.close()
+
+gs_bcc_concentration,gs_bcc_energy,gs_bcc_fitenergy,gs_bcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 7:  #mmaps
+        c, c1,c2,e,fe,err,i = line.split()
+    gs_bcc_concentration.append(float(c))
+    gs_bcc_energy.append(float(e))
+    gs_bcc_fitenergy.append(float(fe))
+    gs_bcc_index.append(int(i))
+
+
+f = open('../../../CuPd_fcc_encut500_4000/gs.out','r')
+lines = f.readlines()
+f.close()
+
+gs_fcc_concentration,gs_fcc_energy,gs_fcc_fitenergy,gs_fcc_index = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    elif len(fields) == 7: 
+        c, c1,c2,e,fe,err,i = line.split()
+    gs_fcc_concentration.append(float(c))
+    gs_fcc_energy.append(float(e))
+    gs_fcc_fitenergy.append(float(fe))
+    gs_fcc_index.append(int(i))
+
+
+import matplotlib.pyplot as plt
+
+plt.plot(gs_bcc_concentration,gs_bcc_fitenergy,'ro-',label="bcc convex hull")
+
+plt.plot(gs_fcc_concentration,gs_fcc_fitenergy,'yo-',label="fcc convex hull")
+plt.plot([0.25,0.5],[-0.103, -0.121],'b--')
+
+plt.text(0.23,-0.113,'L12')
+plt.text(0.36,-0.121,'A1')
+plt.text(0.49,-0.128,'B2')
+plt.xlabel('$x_{%s}$' %'Pd')
+plt.ylabel('Heat of Formation ($eV/atom$)')
+plt.ylim([-0.13,0.1])
+plt.tight_layout()
+plt.legend(loc='best')
+str = './images-si/CuPd-convexhull-compare.png'
+plt.savefig(str)
+plt.show()
+
+
+
+
+
+
+#+END_SRC
+
+#+RESULTS:
+
+#+RESULTS:
+** Construction of phase diagram
+*** without vibrational free energy
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10,8))
+f = open('../raw-data/novib-0-0.5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+f = open('../raw-data/novib-0.5-0.75.txt','r')
+lines=f.readlines()
+f.close()
+
+x_3,T_3,x_4,T_4 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_3.append(float(c))
+    T_3.append(float(e))
+    x_4.append(float(fe))
+    T_4.append(int(i))
+
+plt.plot(x_l12,T_l12,'k-')
+plt.plot(x_b2,T_b2,'k-')
+plt.plot(x_3,T_3,'k-')
+plt.plot(x_4,T_4,'k-')
+plt.plot([0.499999,0.70943],[400,400],'k-',label='CE+MC without $F_{vib}$')
+plt.plot([0.4834,0.289685],[375,375],'k-')
+plt.xlim([0.25,0.75])
+
+#### plot experimental data
+L1x = [0.41194,0.45075,0.47463,0.49552,0.53433,0.6,0.62985,0.74328]
+L1y = [860.89552,844.77612,817.91045,791.04478,726.56716,570.74627,495.52239,200]
+L2x = [0.41194,0.43284,0.44776,0.4597,0.48358,0.49254,0.49851,0.49851]
+L2y = [860,828.65672,791.04478,742.68657,656.71642,511.64179,425.67164,200]
+L3x = [0.41194,0.38209,0.3403,0.42687]
+L3y = [860,823.28358,667.46269,200]
+L4x = [0.41194,0.3791,0.34328,0.32239,0.31045,0.30149,0.28358,0.27761,0.2806]
+L4y = [860,855.52239,807.16418,769.55224,737.31343,705.07463,667.46269,667.46269,200]
+L5x = [0.28358,0.3403]
+L5y = [667.46269,667.46269]
+plt.plot(L1x,L1y,'r-',label='Mei Li et al (2008)')
+plt.plot(L2x,L2y,'r-')
+plt.plot(L3x,L3y,'r-')
+plt.plot(L4x,L4y,'r-')
+plt.plot(L5x,L5y,'r-')
+plt.xlabel('$x_{%s}$' %'Pd')
+plt.ylabel('Temperature (K)')
+plt.legend()
+# add label
+
+plt.text(0.3,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+plt.text(0.53,200,'L12(Cu,Pd) + B2(Cu,Pd)')
+plt.text(0.34,400,'disordered fcc + B2')
+plt.text(0.52,430,'disordered fcc + B2')
+plt.text(0.48,550,'B2')
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/figure1'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+:END:
+
+*** with vibrational free energy
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,6))
+
+f = open('../raw-data/novib-0-0.5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-')
+ax.plot(x_b2,T_b2,'k-')
+ax.plot([0.499999,0.70943],[400,400],'k-',label='CE+MC without $F_{vib}$')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../raw-data/dt10-vib.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-')
+ax.plot(x_b2,T_b2,'r-')
+ax.plot([0.33,0.4827],[375,375],'k-')
+ax.plot([0.334,0.473],[350,350],'r-',label='CE+MC with $F_{vib}$')
+line3,=ax.plot(0.479,700,'ro',label='Critical point with $F_{vib}$')
+line4,=ax.plot(0.49,720,'ko',label = 'Critical point without $F_{vib}$')
+plt.xlim([0.25,0.5])
+
+
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+plt.legend(loc='best',handler_map={line3: HandlerLine2D(numpoints=1),line4: HandlerLine2D(numpoints=1)},prop={'size':12})
+# add label
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+ax.text(0.35,420,'disordered fcc + B2')
+ax.text(0.48,550,'B2')
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/figure3'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+:END:
+
+*** effect of thermal expansion
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,6))
+
+f = open('../raw-data/thermalexpand0%.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-',label='Thermal expand 0%')
+ax.plot(x_b2,T_b2,'k-')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../raw-data/thermalexpand2%.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-',label='Thermal expand 2%')
+ax.plot(x_b2,T_b2,'r-')
+plt.xlim([0.25,0.5])
+
+
+
+f = open('../raw-data/dt10-vib.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'b-',label='Thermal expand 1%')
+ax.plot(x_b2,T_b2,'b-')
+plt.xlim([0.25,0.5])
+plt.legend(loc='best')
+ax.plot([0.334,0.473],[350,350],'k-')
+
+
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+ax.text(0.35,420,'disordered fcc + B2')
+ax.text(0.48,550,'B2')
+
+
+
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+
+# add label
+
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/thermalexpand'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+
+#+RESULTS:
+:RESULTS:
+:END:
+
+*** effect of temperature interval
+**** without vibrational free energy
+
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,6))
+
+f = open('../raw-data/novib-0-0.5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-',label='dT = 25 K')
+ax.plot(x_b2,T_b2,'k-')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../raw-data/novib-dt10.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-',label='dT = 10 K')
+ax.plot(x_b2,T_b2,'r-')
+plt.xlim([0.25,0.5])
+
+
+
+f = open('../raw-data/novib-dt5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'b-',label='dT = 5 K')
+ax.plot(x_b2,T_b2,'b-')
+plt.xlim([0.25,0.5])
+plt.legend(loc='best')
+ax.plot([0.334,0.485],[375,375],'k-')
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+ax.text(0.36,400,'disordered fcc + B2')
+ax.text(0.48,550,'B2')
+
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+
+# add label
+
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/novib-dT'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+
+#+RESULTS:
+:RESULTS:
+:END:
+
+**** with vibrational free energy
+
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,6))
+
+f = open('../raw-data/vib-dt25.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-',label='dT = 25 K')
+ax.plot(x_b2,T_b2,'k-')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../raw-data/dt10-vib.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-',label='dT = 10 K')
+ax.plot(x_b2,T_b2,'r-')
+plt.xlim([0.25,0.5])
+
+
+
+f = open('../raw-data/vib-dt5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'b-',label='dT = 5 K')
+ax.plot(x_b2,T_b2,'b-')
+plt.xlim([0.25,0.5])
+plt.legend(loc='best')
+ax.plot([0.334,0.473],[350,350],'k-')
+
+
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+ax.text(0.35,420,'disordered fcc + B2')
+ax.text(0.48,550,'B2')
+
+
+
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+
+# add label
+
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/temperature-interval'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+:END:
+
+*** effect of super-cell radius
+
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,6))
+
+f = open('../raw-data/novib-0-0.5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-',label='Super-cell radius = 35 $\AA$')
+ax.plot(x_b2,T_b2,'k-')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../raw-data/novib-er42.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-',label='Super-cell radius = 42 $\AA$')
+ax.plot(x_b2,T_b2,'r-')
+plt.xlim([0.25,0.5])
+
+
+
+f = open('../raw-data/novib-er50.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'b-',label='Super-cell radius = 50 $\AA$')
+ax.plot(x_b2,T_b2,'b-')
+plt.xlim([0.25,0.5])
+plt.legend(loc='best')
+ax.plot([0.334,0.485],[375,375],'k-')
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+
+ax.text(0.36,400,'disordered fcc + B2')
+
+ax.text(0.48,550,'B2')
+plt.legend(loc=2,prop={'size':12})
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+
+# add label
+
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/er'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+
+
+
+
+
+*** effect of error in DFT calculation
+#+BEGIN_SRC python :results output org drawer
+from vasp import Vasp
+from ase.io import read
+import os
+import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+fig,ax=plt.subplots(figsize=(7,5))
+
+f = open('../../git/fgeng/raw-data/novib-0-0.5.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'k-',label='Additional 0 meV/atom')
+ax.plot(x_b2,T_b2,'k-')
+plt.xlim([0.25,0.5])
+
+#### plot phase diagram with vibrational free energy
+
+
+f = open('../../git/fgeng/raw-data/addition1meV.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'r-',label='Additional -1 meV/atom')
+ax.plot(x_b2,T_b2,'r-')
+plt.xlim([0.25,0.5])
+
+
+
+f = open('../../git/fgeng/raw-data/addition2meV.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'b-',label='Additional -2 meV/atom')
+ax.plot(x_b2,T_b2,'b-')
+plt.xlim([0.25,0.5])
+
+
+f = open('../../git/fgeng/raw-data/addition3meV.txt','r')
+lines = f.readlines()
+f.close()
+
+x_l12,T_l12,x_b2,T_b2 = [],[],[],[]
+for line in lines:
+    fields = line.split()
+    if len(fields) == 4:
+        c,e,fe,i = line.split()
+    else:
+        print "error"
+    x_l12.append(float(c))
+    T_l12.append(float(e))
+    x_b2.append(float(fe))
+    T_b2.append(int(i))
+
+
+ax.plot(x_l12,T_l12,'g-',label='Additional -3 meV/atom')
+ax.plot(x_b2,T_b2,'g-')
+plt.legend(loc=2,prop={'size':12})
+ax.plot([0.334,0.485],[375,375],'k-')
+ax.text(0.33,200,'L12(Cu, Pd) + B2(Cu,Pd)')
+ax.text(0.36,400,'disordered fcc + B2')
+ax.text(0.48,550,'B2')
+
+ax.set_xlabel('$x_{%s}$' %'Pd')
+ax.set_ylabel('Temperature (K)')
+
+for ex in ['.png','.eps']:
+  plt.savefig('./images-si/changeb2'+ex,dpi=300)
+plt.show()
+#+END_SRC
+
+
+
+
+
+
+
+
